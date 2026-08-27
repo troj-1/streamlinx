@@ -1,12 +1,13 @@
 package com.streamflixreborn.streamflix.providers
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-import android.content.Context
+
 import java.util.Base64
 import com.streamflixreborn.streamflix.compat.Log
-import android.webkit.CookieManager
+
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
-import com.streamflixreborn.streamflix.StreamFlixApp
+
 import com.streamflixreborn.streamflix.models.Category
 import com.streamflixreborn.streamflix.models.Episode
 import com.streamflixreborn.streamflix.models.Genre
@@ -43,7 +44,7 @@ object ZaluknijProvider : Provider {
 
     private const val TAG = "ZaluknijProvider"
 
-    private var webViewResolver: WebViewResolver? = null
+    
     private val providerMutex = Mutex()
 
     private interface Service {
@@ -76,15 +77,9 @@ object ZaluknijProvider : Provider {
         .build()
         .create(Service::class.java)
 
-    fun init(context: Context) {
-        webViewResolver = WebViewResolver(context)
-    }
+    fun init(context: Any?) {}
 
-    private fun getResolver(): WebViewResolver {
-        return webViewResolver ?: WebViewResolver(StreamFlixApp.instance).also {
-            webViewResolver = it
-        }
-    }
+    
 
     override suspend fun getHome(): List<Category> {
         val document = getDocument(baseUrl)
@@ -577,7 +572,7 @@ object ZaluknijProvider : Provider {
                 throw e
             }
             Log.d(TAG, "Resolving clearance with WebView for $url: HTTP ${e.code()}")
-            val html = providerMutex.withLock { getResolver().get(url) }
+            val html = providerMutex.withLock { com.streamflixreborn.streamflix.utils.WebViewResolver.resolve(url) ?: "" }
             promoteClearanceCookies(url)
             org.jsoup.Jsoup.parse(html).apply { setBaseUri(url) }
         } catch (e: Exception) {
@@ -585,7 +580,7 @@ object ZaluknijProvider : Provider {
                 throw e
             }
             Log.d(TAG, "Resolving clearance with WebView for $url: ${e.message}")
-            val html = providerMutex.withLock { getResolver().get(url) }
+            val html = providerMutex.withLock { com.streamflixreborn.streamflix.utils.WebViewResolver.resolve(url) ?: "" }
             promoteClearanceCookies(url)
             org.jsoup.Jsoup.parse(html).apply { setBaseUri(url) }
         }
@@ -605,42 +600,11 @@ object ZaluknijProvider : Provider {
             html.contains("Just a moment...", ignoreCase = true)
     }
 
-    private fun promoteClearanceCookies(sourceUrl: String) {
-        val cookieManager = CookieManager.getInstance()
-        val cookieHeader = listOf(
-            sourceUrl,
-            baseUrl,
-            "$baseUrl/"
-        ).firstNotNullOfOrNull { candidate ->
-            cookieManager.getCookie(candidate)?.takeIf { it.isNotBlank() }
-        }.orEmpty()
-
-        if (cookieHeader.isBlank()) {
-            return
-        }
-
-        cookieHeader.split(";")
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .forEach { cookie ->
-                val rootCookie = if (cookie.contains("Path=", ignoreCase = true)) cookie else "$cookie; Path=/"
-                listOf(sourceUrl, baseUrl, "$baseUrl/").distinct().forEach { target ->
-                    cookieManager.setCookie(target, rootCookie)
-                }
-            }
-
-        cookieManager.flush()
-    }
+    private fun promoteClearanceCookies(sourceUrl: String) {}
 
     private fun clearanceCookieHeader(requestUrl: String): String? {
-        val cookieManager = CookieManager.getInstance()
-        return listOf(
-            requestUrl,
-            baseUrl,
-            "$baseUrl/"
-        ).firstNotNullOfOrNull { candidate ->
-            cookieManager.getCookie(candidate)?.takeIf { it.isNotBlank() }
-        }
+        val url = requestUrl.toHttpUrlOrNull() ?: return null
+        return com.streamflixreborn.streamflix.utils.NetworkClient.cookieJar.loadForRequest(url).joinToString("; ") { it.toString() }
     }
 
     private fun artworkUrl(url: String?, referer: String = baseUrl): String? {

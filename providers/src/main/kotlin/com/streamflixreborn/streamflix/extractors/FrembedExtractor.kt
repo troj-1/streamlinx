@@ -187,9 +187,10 @@ class FrembedExtractor (var newUrl: String = "") : Extractor() {
                             val uri = java.net.URI(fullRedirect)
                             val newBaseUrl = "${uri.scheme}://${uri.host}/"
                             Log.i("FrembedExtractor", "API redirected to a new domain. Updating cache to: $newBaseUrl")
-                            UserPreferences.setProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL, newBaseUrl)
-                            UserPreferences.setProviderCache(FrembedProvider, UserPreferences.PROVIDER_LOGO, newBaseUrl + "favicon-32x32.png")
-                            FrembedProvider.rebuildService()
+                            // Desktop: provider cache not implemented yet
+                            // UserPreferences.setProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL, newBaseUrl)
+                            // UserPreferences.setProviderCache(FrembedProvider, UserPreferences.PROVIDER_LOGO, newBaseUrl + "favicon-32x32.png")
+                            // FrembedProvider.rebuildService()
                             
                             return FrembedExtractor(newBaseUrl).servers(videoType)
                         } catch (ex: Exception) {

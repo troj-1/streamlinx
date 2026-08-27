@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit
 object CuevanaEuProvider : Provider {
 
     override val name = "Cuevana 3"
-    override val baseUrl: String get() = "https://${UserPreferences.cuevanaDomain}"
+    override val baseUrl: String get() = "https://${"cuevana.biz"}"
     override val language = "es"
     private const val TAG = "CuevanaEuProvider"
 
@@ -86,9 +86,9 @@ object CuevanaEuProvider : Provider {
                         } else {
                             null
                         }
-                        if (!newHost.isNullOrEmpty() && newHost != UserPreferences.cuevanaDomain) {
-                            Log.d(TAG, "Domain changed from ${UserPreferences.cuevanaDomain} to $newHost")
-                            UserPreferences.cuevanaDomain = newHost
+                        if (!newHost.isNullOrEmpty() && newHost != "cuevana.biz") {
+                            Log.d(TAG, "Domain changed from ${"cuevana.biz"} to $newHost")
+                            // domain changed
                             _service = null
                             _client = null
                         }
@@ -285,10 +285,10 @@ object CuevanaEuProvider : Provider {
                     return if (items.isNotEmpty()) Category(name = name, list = items) else null
                 }
 
-                parseSection("#last-movies", "Últimas Películas")?.let { categories.add(it) }
-                parseSection("#premiere-movies", "Estrenos Películas")?.let { categories.add(it) }
-                parseSection("#trend-movies", "Tendencias Películas")?.let { categories.add(it) }
-                parseSection("#last-series", "Últimas Series")?.let { categories.add(it) }
+                parseSection("#last-movies", "ÃƒÅ¡ltimas PelÃƒÂ­culas")?.let { categories.add(it) }
+                parseSection("#premiere-movies", "Estrenos PelÃƒÂ­culas")?.let { categories.add(it) }
+                parseSection("#trend-movies", "Tendencias PelÃƒÂ­culas")?.let { categories.add(it) }
+                parseSection("#last-series", "ÃƒÅ¡ltimas Series")?.let { categories.add(it) }
                 parseSection("#premiere-series", "Estrenos Series")?.let { categories.add(it) }
                 parseSection("#trend-series", "Tendencias Series")?.let { categories.add(it) }
 
@@ -301,10 +301,10 @@ object CuevanaEuProvider : Provider {
                     listOfNotNull(
                         movies.await()
                             .takeIf { it.isNotEmpty() }
-                            ?.let { Category(name = "Últimas Películas", list = it.take(20)) },
+                            ?.let { Category(name = "ÃƒÅ¡ltimas PelÃƒÂ­culas", list = it.take(20)) },
                         tvShows.await()
                             .takeIf { it.isNotEmpty() }
-                            ?.let { Category(name = "Últimas Series", list = it.take(20)) },
+                            ?.let { Category(name = "ÃƒÅ¡ltimas Series", list = it.take(20)) },
                     )
                 }
             }
@@ -316,16 +316,16 @@ object CuevanaEuProvider : Provider {
     override suspend fun search(query: String, page: Int): List<Item> {
         if (query.isBlank()) {
             return listOf(
-                Genre("accion", "Acción"),
+                Genre("accion", "AcciÃƒÂ³n"),
                 Genre("aventura", "Aventura"),
-                Genre("animacion", "Animación"),
-                Genre("ciencia-ficcion", "Ciencia Ficción"),
+                Genre("animacion", "AnimaciÃƒÂ³n"),
+                Genre("ciencia-ficcion", "Ciencia FicciÃƒÂ³n"),
                 Genre("comedia", "Comedia"),
                 Genre("crimen", "Crimen"),
                 Genre("documental", "Documental"),
                 Genre("drama", "Drama"),
                 Genre("familia", "Familia"),
-                Genre("fantasia", "Fantasía"),
+                Genre("fantasia", "FantasÃƒÂ­a"),
                 Genre("misterio", "Misterio"),
                 Genre("romance", "Romance"),
                 Genre("suspense", "Suspenso"),
@@ -1328,7 +1328,7 @@ object CuevanaEuProvider : Provider {
         }
         val movies = async {
             getFastApiHomeCategory(
-                name = "Películas Online",
+                name = "PelÃƒÂ­culas Online",
                 path = "/listing/movies",
                 postType = "movies",
                 postsPerPage = 18,
@@ -1352,7 +1352,7 @@ object CuevanaEuProvider : Provider {
         }
         val mostViewedMovies = async {
             getFastApiHomeCategory(
-                name = "Películas más vistas",
+                name = "PelÃƒÂ­culas mÃƒÂ¡s vistas",
                 path = "/listing/movies",
                 postType = "movies",
                 postsPerPage = 6,
@@ -1419,12 +1419,12 @@ object CuevanaEuProvider : Provider {
 
     private fun genreFromId(id: Int): Genre? {
         val entry = when (id) {
-            26 -> "Acción" to "accion"
+            26 -> "AcciÃƒÂ³n" to "accion"
             253 -> "Action & Adventure" to "action-adventure"
-            53 -> "Animación" to "animacion"
+            53 -> "AnimaciÃƒÂ³n" to "animacion"
             25 -> "Aventura" to "aventura"
-            214 -> "Bélica" to "belica"
-            27 -> "Ciencia ficción" to "ciencia-ficcion"
+            214 -> "BÃƒÂ©lica" to "belica"
+            27 -> "Ciencia ficciÃƒÂ³n" to "ciencia-ficcion"
             80 -> "Comedia" to "comedia"
             190 -> "Crimen" to "crimen"
             8690 -> "Documental" to "documental"
@@ -1546,6 +1546,6 @@ object CuevanaEuProvider : Provider {
     }
 
     override suspend fun getPeople(id: String, page: Int): People {
-        throw Exception("Esta funzione non è disponibile nel provider Cuevana 3.")
+        throw Exception("Esta funzione non ÃƒÂ¨ disponibile nel provider Cuevana 3.")
     }
 }

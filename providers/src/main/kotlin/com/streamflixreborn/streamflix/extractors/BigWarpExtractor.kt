@@ -1,6 +1,5 @@
 package com.streamflixreborn.streamflix.extractors
 
-import androidx.media3.common.MimeTypes
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.models.Video
 import org.jsoup.nodes.Document
@@ -36,7 +35,7 @@ class BigWarpExtractor: Extractor() {
         return Video(
             source = m3u8.toString(),
             subtitles = listOf(),
-            type = MimeTypes.APPLICATION_MP4,
+            type = "video/mp4",
             headers =                     mapOf(
                 "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
                 "Referer" to mainUrl

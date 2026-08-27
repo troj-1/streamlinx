@@ -1,6 +1,5 @@
 package com.streamflixreborn.streamflix.extractors
 
-import androidx.media3.common.MimeTypes
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.utils.JsUnpacker
@@ -54,7 +53,7 @@ open class LoadXExtractor: Extractor() {
             ?: throw Exception("videoSource not found in response")
 
         return Video(source = videoUrl,
-            type = MimeTypes.APPLICATION_M3U8,
+            type = "application/x-mpegURL",
             headers = mapOf(
                 "User-Agent" to "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:139.0) Gecko/20100101 Firefox/139.0",
                 "Referer" to mainUrl,

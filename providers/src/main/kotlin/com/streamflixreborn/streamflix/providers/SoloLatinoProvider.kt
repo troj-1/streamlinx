@@ -5,7 +5,7 @@ import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.models.*
-import com.streamflixreborn.streamflix.models.sololatino.Item
+
 import com.streamflixreborn.streamflix.utils.DnsResolver
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.decodeFromString
@@ -23,7 +23,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import java.security.MessageDigest
-import MyCookieJar
+import com.streamflixreborn.streamflix.utils.MyCookieJar
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -59,7 +59,7 @@ object SoloLatinoProvider : Provider {
                     .build()
                 chain.proceed(request)
             }
-            .cookieJar(MyCookieJar())
+            .cookieJar(com.streamflixreborn.streamflix.utils.MyCookieJar())
             .cache(appCache)
             .readTimeout(30, TimeUnit.SECONDS)
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -186,24 +186,24 @@ object SoloLatinoProvider : Provider {
     override suspend fun search(query: String, page: Int): List<Item> {
         if (query.isBlank()) {
             return listOf(
-                Genre("accion", "Acción"),
+                Genre("accion", "AcciÃ³n"),
                 Genre("action-adventure", "Action & Adventure"),
-                Genre("animacion", "Animación"),
+                Genre("animacion", "AnimaciÃ³n"),
                 Genre("aventura", "Aventura"),
-                Genre("belica", "Bélica"),
-                Genre("ciencia-ficcion", "Ciencia Ficción"),
+                Genre("belica", "BÃ©lica"),
+                Genre("ciencia-ficcion", "Ciencia FicciÃ³n"),
                 Genre("comedia", "Comedia"),
                 Genre("crimen", "Crimen"),
                 Genre("disney", "Disney"),
                 Genre("documental", "Documental"),
                 Genre("drama", "Drama"),
                 Genre("familia", "Familia"),
-                Genre("fantasia", "Fantasía"),
+                Genre("fantasia", "FantasÃ­a"),
                 Genre("hbo", "HBO"),
                 Genre("historia", "Historia"),
                 Genre("kids", "Kids"),
                 Genre("misterio", "Misterio"),
-                Genre("musica", "Música"),
+                Genre("musica", "MÃºsica"),
                 Genre("romance", "Romance"),
                 Genre("sci-fi-fantasy", "Sci-Fi & Fantasy"),
                 Genre("soap", "Soap"),
@@ -603,7 +603,7 @@ object SoloLatinoProvider : Provider {
             try {
                 val dataLinkMatch = Regex("""dataLink = (\[.+?\]);""").find(iframeHtml)
                 if (dataLinkMatch != null) {
-                    val items = json.decodeFromString<List<Item>>(dataLinkMatch.groupValues[1])
+                    val items = json.decodeFromString<List<com.streamflixreborn.streamflix.models.sololatino.Item>>(dataLinkMatch.groupValues[1])
                     for (item in items) {
                         val lang = when(item.video_language) {
                             "LAT" -> "[LAT]"

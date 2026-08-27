@@ -76,7 +76,7 @@ fun MovieDetailScreen(
 
                     // Meta info row
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        m.rating?.let { Text("\u2B50 ${String.format(\"%.1f\", it)}", color = MaterialTheme.colorScheme.primary) }
+                        m.rating?.let { Text("\u2B50 ${String.format("%.1f", it)}", color = MaterialTheme.colorScheme.primary) }
                         m.quality?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         m.runtime?.let { Text("${it}min", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
@@ -90,7 +90,7 @@ fun MovieDetailScreen(
                                 try {
                                     val videoType = Video.Type.Movie(
                                         id = m.id, title = m.title,
-                                        releaseDate = m.released?.let { com.streamflixreborn.streamflix.utils.format(it, "yyyy-MM-dd") } ?: "",
+                                        releaseDate = m.released?.let { cal -> java.text.SimpleDateFormat("yyyy-MM-dd").format(cal.time) } ?: "",
                                         poster = m.poster ?: "", imdbId = m.imdbId
                                     )
                                     val srvs = withContext(Dispatchers.IO) { provider.getServers(m.id, videoType) }

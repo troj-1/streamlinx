@@ -31,13 +31,7 @@ object SuperStreamProvider : Provider {
     override val name = "SuperStream"
     override val logo = ""
     override val language = "en"
-    val url = Base64.decode(
-        "aHR0cHM6Ly9zaG93Ym94LnNoZWd1Lm5ldA==",
-        Base64.NO_WRAP
-    ).toString(Charsets.UTF_8) + Base64.decode(
-        "L2FwaS9hcGlfY2xpZW50L2luZGV4Lw==",
-        Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
+    val url = String(java.util.Base64.getDecoder().decode("aHR0cHM6Ly9zaG93Ym94LnNoZWd1Lm5ldA=="), Charsets.UTF_8) + String(java.util.Base64.getDecoder().decode("L2FwaS9hcGlfY2xpZW50L2luZGV4Lw=="), Charsets.UTF_8)
     override val baseUrl = url
 
     private val service = SuperStreamApiService.build()
@@ -46,32 +40,14 @@ object SuperStreamProvider : Provider {
     // The source has its origins in China so I added some extra security with banned words
     // Mayhaps a tiny bit unethical, but this source is just too good :)
     // If you are copying this code please use precautions so they do not change their api.
-    private val iv = Base64.decode(
-        "d0VpcGhUbiE=",
-        Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
-    private val key = Base64.decode(
-        "MTIzZDZjZWRmNjI2ZHk1NDIzM2FhMXc2",
-        Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
+    private val iv = String(java.util.Base64.getDecoder().decode("d0VpcGhUbiE="), Charsets.UTF_8)
+    private val key = String(java.util.Base64.getDecoder().decode("MTIzZDZjZWRmNjI2ZHk1NDIzM2FhMXc2"), Charsets.UTF_8)
 
-    private val secondApiUrl = Base64.decode(
-        "aHR0cHM6Ly9tYnBhcGkuc2hlZ3UubmV0L2FwaS9hcGlfY2xpZW50L2luZGV4Lw==",
-        Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
+    private val secondApiUrl = String(java.util.Base64.getDecoder().decode("aHR0cHM6Ly9tYnBhcGkuc2hlZ3UubmV0L2FwaS9hcGlfY2xpZW50L2luZGV4Lw=="), Charsets.UTF_8)
 
-    private val appKey = Base64.decode(
-        "bW92aWVib3g=",
-        Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
-    private val appId = Base64.decode(
-        "Y29tLnRkby5zaG93Ym94",
-        Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
-    private val appIdSecond = Base64.decode(
-        "Y29tLm1vdmllYm94cHJvLmFuZHJvaWQ=",
-        Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
+    private val appKey = String(java.util.Base64.getDecoder().decode("bW92aWVib3g="), Charsets.UTF_8)
+    private val appId = String(java.util.Base64.getDecoder().decode("Y29tLnRkby5zaG93Ym94"), Charsets.UTF_8)
+    private val appIdSecond = String(java.util.Base64.getDecoder().decode("Y29tLm1vdmllYm94cHJvLmFuZHJvaWQ="), Charsets.UTF_8)
     private const val APP_VERSION = "14.7"
     private const val APP_VERSION_CODE = "160"
 
@@ -487,7 +463,7 @@ object SuperStreamProvider : Provider {
             .mapIndexed { index, link ->
                 Video.Server(
                     id = index.toString(),
-                    name = "${link.quality} • ${link.size}",
+                    name = "${link.quality} Ã¢â‚¬Â¢ ${link.size}",
                 ).apply {
                     video = Video(
                         source = link.path ?: "",
@@ -540,7 +516,7 @@ object SuperStreamProvider : Provider {
                     IvParameterSpec(iv.toByteArray())
                 )
 
-                Base64.encode(cipher.doFinal(str.toByteArray()), 2).toString(Charsets.UTF_8)
+                java.util.Base64.getEncoder().encodeToString(cipher.doFinal(str.toByteArray()))
             } catch (e: Exception) {
                 e.printStackTrace()
                 null
@@ -627,10 +603,9 @@ object SuperStreamProvider : Provider {
                 "encrypt_data" to encryptedQuery,
             )
         ).toString()
-        val base64Body = Base64.encode(
-            newBody.toByteArray(),
-            Base64.NO_WRAP
-        ).toString(Charsets.UTF_8)
+        val base64Body = java.util.Base64.getEncoder().encodeToString(
+            newBody.toByteArray()
+        )
 
         return mapOf(
             "data" to base64Body,

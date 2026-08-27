@@ -35,20 +35,20 @@ object WiflixProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
     override val portalUrl: String = defaultPortalUrl
         get() {
             val cachePortalURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_PORTAL_URL)
-            return cachePortalURL.ifEmpty{ field }
+            return cachePortalURL?.ifEmpty{ field } ?: field
         }
 
     override val defaultBaseUrl: String = "https://flemmix.team/"
     override val baseUrl: String = defaultBaseUrl
         get() {
             val cacheURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_URL)
-            return cacheURL.ifEmpty{ field }
+            return cacheURL?.ifEmpty{ field } ?: field
         }
 
     override val logo: String
         get() {
             var cacheLogo = UserPreferences.getProviderCache(this,UserPreferences.PROVIDER_LOGO)
-            return cacheLogo.ifEmpty { "" }
+            return cacheLogo?.ifEmpty { "" } ?: ""
         }
 
     override val language = "fr"
@@ -70,7 +70,7 @@ object WiflixProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
 
         categories.add(
             Category(
-                name = "TOP Séries",
+                name = "TOP SÃ©ries",
                 list = document.select("div.block-main").getOrNull(0)?.select("div.mov")?.map {
                     TvShow(
                         id = it.selectFirst("a.mov-t")
@@ -272,7 +272,7 @@ object WiflixProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
                 ?.selectFirst("div.mov-desc")
                 ?.text()?.trim(),
             runtime = document.select("ul.mov-list li")
-                .find { it.selectFirst("div.mov-label")?.text()?.contains("Durée") == true }
+                .find { it.selectFirst("div.mov-label")?.text()?.contains("DurÃ©e") == true }
                 ?.selectFirst("div.mov-desc")
                 ?.text()?.let {
                     val hours = it.substringBefore("h").toIntOrNull() ?: 0
@@ -281,7 +281,7 @@ object WiflixProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
                     hours * 60 + minutes
                 }?.takeIf { it != 0 },
             quality = document.select("ul.mov-list li")
-                .find { it.selectFirst("div.mov-label")?.text()?.contains("Qualité") == true }
+                .find { it.selectFirst("div.mov-label")?.text()?.contains("QualitÃ©") == true }
                 ?.selectFirst("div.mov-desc")
                 ?.text(),
             poster = document.selectFirst("img#posterimg")
@@ -380,7 +380,7 @@ object WiflixProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
                 ?.selectFirst("div.mov-desc")
                 ?.text()?.trim(),
             runtime = document.select("ul.mov-list li")
-                .find { it.selectFirst("div.mov-label")?.text()?.contains("Durée") == true }
+                .find { it.selectFirst("div.mov-label")?.text()?.contains("DurÃ©e") == true }
                 ?.selectFirst("div.mov-desc")
                 ?.text()?.let {
                     val hours = it.substringBefore("h").toIntOrNull() ?: 0
@@ -394,12 +394,12 @@ object WiflixProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
             seasons = listOfNotNull(
                 Season(
                     id = "$id/blocvostfr",
-                    title = "Épisodes - VOSTFR",
+                    title = "Ã‰pisodes - VOSTFR",
                     number = seasonNumber
                 ).takeIf { document.select("div.blocvostfr ul.eplist li").size > 0 },
                 Season(
                     id = "$id/blocfr",
-                    title = "Épisodes - VF",
+                    title = "Ã‰pisodes - VF",
                     number = seasonNumber
                 ).takeIf { document.select("div.blocfr ul.eplist li").size > 0 },
             ),

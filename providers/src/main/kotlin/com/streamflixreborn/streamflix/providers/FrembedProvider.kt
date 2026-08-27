@@ -40,23 +40,20 @@ object FrembedProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
 
     override val defaultPortalUrl: String = "https://audin213.com/"
 
-    override val portalUrl: String = defaultPortalUrl
+    override val portalUrl: String
         get() {
-            val cachePortalURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_PORTAL_URL)
-            return cachePortalURL.ifEmpty { field }
+            return defaultPortalUrl
         }
 
     override val defaultBaseUrl: String = "https://frembed.casa/"
-    override val baseUrl: String = defaultBaseUrl
+    override val baseUrl: String
         get() {
-            val cacheURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_URL)
-            return cacheURL.ifEmpty { field }
+            return defaultBaseUrl
         }
 
     override val logo: String
         get() {
-            val cacheLogo = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_LOGO)
-            return cacheLogo.ifEmpty { baseUrl + "favicon-32x32.png" }
+            return "/favicon-32x32.png"
         }
     override val language = "fr"
     override val changeUrlMutex = Mutex()
@@ -249,13 +246,13 @@ object FrembedProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
             val latest = service.getApiPublic("latest")
             categories.add(latest.toCategorie("Nouveaux films"))
             val updated = service.getApiPublic("updated")
-            categories.add(updated.toCategorie("Films mis à jour"))
+            categories.add(updated.toCategorie("Films mis ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour"))
             val mostViewed = service.getApiView("most-viewed")
             categories.add(mostViewed.toCategorie("Meilleurs films"))
             val latestAdded = service.getApiView("latest-added-seasons")
-            categories.add(latestAdded.toCategorie("Nouvelles séries"))
+            categories.add(latestAdded.toCategorie("Nouvelles sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©ries"))
             val mostViewedSeasons = service.getApiView("most-viewed-seasons")
-            categories.add(mostViewedSeasons.toCategorie("Meilleures séries"))
+            categories.add(mostViewedSeasons.toCategorie("Meilleures sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©ries"))
 
         } catch (e: Exception) { }
 

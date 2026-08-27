@@ -1,6 +1,7 @@
 package com.streamflixreborn.streamflix.providers
 
 import java.net.URI
+import java.net.URLEncoder
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.models.Category
@@ -84,7 +85,7 @@ object AnikotoProvider : Provider {
         }
 
         val document = try {
-            service.getPage("$baseUrl/filter?keyword=${Uri.encode(query)}&page=$page")
+            service.getPage("$baseUrl/filter?keyword=${java.net.URLEncoder.encode(query, "UTF-8")}&page=$page")
         } catch (e: HttpException) {
             if (page > 1 && e.code() == 404) return emptyList()
             throw e
@@ -232,7 +233,7 @@ object AnikotoProvider : Provider {
     }
 
     override suspend fun getGenre(id: String, page: Int): Genre {
-        val path = if (id.startsWith("http")) Uri.parse(id).path.orEmpty().removePrefix("/") else "genre/$id"
+        val path = if (id.startsWith("http")) URI(id).path.orEmpty().removePrefix("/") else "genre/$id"
         val document = service.getPage("$baseUrl/$path?page=$page")
         val name = document.selectFirst(".head .title, h1, h2")?.text()?.trim()
             ?: id.substringAfterLast("/").replace("-", " ").replaceFirstChar { it.titlecase() }

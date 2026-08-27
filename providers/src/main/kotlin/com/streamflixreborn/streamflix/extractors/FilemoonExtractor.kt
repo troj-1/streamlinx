@@ -158,8 +158,8 @@ open class FilemoonExtractor : Extractor() {
         val publicKey = keyPair.public as ECPublicKey
 
         // JWK coordinates
-        val x = Base64.encodeToString(publicKey.w.affineX.toByteArray().stripLeadingZero(), Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
-        val y = Base64.encodeToString(publicKey.w.affineY.toByteArray().stripLeadingZero(), Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        val x = java.util.Base64.getEncoder().encodeToString(publicKey.w.affineX.toByteArray().stripLeadingZero())
+        val y = java.util.Base64.getEncoder().encodeToString(publicKey.w.affineY.toByteArray().stripLeadingZero())
 
         val signatureObj = Signature.getInstance("SHA256withECDSA")
         signatureObj.initSign(privateKey)
@@ -168,7 +168,7 @@ open class FilemoonExtractor : Extractor() {
 
         // Convert DER to Raw (r + s)
         val rawSignature = derToRawSignature(derSignature)
-        val encodedSignature = Base64.encodeToString(rawSignature, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        val encodedSignature = java.util.Base64.getEncoder().encodeToString(rawSignature)
 
         val jwk = mapOf(
             "crv" to "P-256",

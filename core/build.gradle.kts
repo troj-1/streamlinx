@@ -21,6 +21,11 @@ dependencies {
     // JSON
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
     implementation("com.google.code.gson:gson:2.11.0")
+    implementation("org.json:json:20240303")
+
+    // WebSocket & HTTP server (used by some extractors)
+    implementation("org.java-websocket:Java-WebSocket:1.5.3")
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")

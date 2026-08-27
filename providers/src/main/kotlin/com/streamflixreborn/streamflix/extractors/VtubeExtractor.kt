@@ -31,7 +31,7 @@ class VtubeExtractor : Extractor() {
                 ?.getOrNull(1)
             ?: throw Exception("Unable to extract Vtube source")
 
-        val uri = Uri.parse(link)
+        val uri = java.net.URI(link)
         val origin = "${uri.scheme}://${uri.host}"
 
         return Video(

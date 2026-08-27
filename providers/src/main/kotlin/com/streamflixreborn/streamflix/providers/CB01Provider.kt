@@ -138,14 +138,14 @@ object CB01Provider : Provider {
             .replace(Regex("\\s*\\[\\s*hd\\s*(?:/3d)?\\s*\\]", RegexOption.IGNORE_CASE), "")
 
         val episodeLangRegex = Regex(
-            pattern = "\\s*[–-]\\s*\\d+[x×]\\d+(?:[./]\\d+)*\\s*[–-]\\s*([A-Za-z][A-Za-z -]{1,})\\s*$",
+            pattern = "\\s*[â€“-]\\s*\\d+[xÃ—]\\d+(?:[./]\\d+)*\\s*[â€“-]\\s*([A-Za-z][A-Za-z -]{1,})\\s*$",
             option = RegexOption.IGNORE_CASE
         )
         val cleanedEpisode = episodeLangRegex.replace(withoutYearHd) { mr ->
             val lang = mr.groupValues.getOrNull(1)?.trim().orEmpty()
             if (lang.startsWith("sub", ignoreCase = true)) " - $lang" else ""
         }
-        val completaRegex = Regex("\\s*[–-]\\s*Stagione\\s+\\d+\\s*[–-]\\s*COMPLETA\\s*$", RegexOption.IGNORE_CASE)
+        val completaRegex = Regex("\\s*[â€“-]\\s*Stagione\\s+\\d+\\s*[â€“-]\\s*COMPLETA\\s*$", RegexOption.IGNORE_CASE)
         val cleaned = completaRegex.replace(cleanedEpisode, "")
 
         return cleaned.trim()
@@ -153,7 +153,7 @@ object CB01Provider : Provider {
 
     private fun parseGenresText(raw: String, hasDurationMarker: Boolean): List<Genre> {
         val withoutDuration = if (hasDurationMarker) {
-            raw.split(Regex("\\s*[–-]\\s*DURATA", RegexOption.IGNORE_CASE)).firstOrNull()
+            raw.split(Regex("\\s*[â€“-]\\s*DURATA", RegexOption.IGNORE_CASE)).firstOrNull()
                 ?: raw
         } else raw
 
@@ -321,7 +321,7 @@ object CB01Provider : Provider {
             id = id,
             title = title,
             poster = poster,
-            overview = tmdbMovie?.overview ?: doc.select("div.ignore-css > p").firstOrNull { !it.text().contains("DURATA", true) }?.text()?.replace(Regex("\\s*\\+?Info\\s*»\\s*$", RegexOption.IGNORE_CASE), "")?.trim(),
+            overview = tmdbMovie?.overview ?: doc.select("div.ignore-css > p").firstOrNull { !it.text().contains("DURATA", true) }?.text()?.replace(Regex("\\s*\\+?Info\\s*Â»\\s*$", RegexOption.IGNORE_CASE), "")?.trim(),
             genres = tmdbMovie?.genres ?: (doc.selectFirst("div.ignore-css > p > strong")?.text()?.trim()?.let { parseGenresText(it, hasDurationMarker = true) } ?: emptyList()),
             trailer = tmdbMovie?.trailer ?: doc.selectFirst("table.cbtable:has(font:matchesOwn(^Guarda il Trailer:$)) + p iframe[data-src*='youtube.com/embed/']")?.attr("data-src")?.replace("/embed/", "/watch?v="),
             quality = if (rawTitle.contains("[HD]", ignoreCase = true) || rawTitle.contains("[HD/3D]", ignoreCase = true)) "HD" else null,
@@ -433,7 +433,7 @@ object CB01Provider : Provider {
             title = title,
             poster = poster,
             trailer = tmdbTvShow?.trailer ?: doc.selectFirst("table.cbtable:has(font:matchesOwn(^Guarda il Trailer:$)) + p iframe")?.attr("data-src")?.replace("/embed/", "/watch?v="),
-            overview = tmdbTvShow?.overview ?: doc.select("div.ignore-css > p").firstOrNull { !it.text().contains("DURATA", true) }?.clone()?.apply { select("strong, b").remove() }?.text()?.replace(Regex("\\s*\\+?Info\\s*»\\s*$", RegexOption.IGNORE_CASE), "")?.trim(),
+            overview = tmdbTvShow?.overview ?: doc.select("div.ignore-css > p").firstOrNull { !it.text().contains("DURATA", true) }?.clone()?.apply { select("strong, b").remove() }?.text()?.replace(Regex("\\s*\\+?Info\\s*Â»\\s*$", RegexOption.IGNORE_CASE), "")?.trim(),
             genres = tmdbTvShow?.genres ?: (doc.selectFirst("div.ignore-css > p > strong")?.text()?.trim()?.let { parseGenresText(it, hasDurationMarker = false) } ?: emptyList()),
             seasons = seasons,
             rating = tmdbTvShow?.rating ?: doc.selectFirst("div.imdb_r [itemprop=ratingValue]")?.text()?.trim()?.toDoubleOrNull(),
@@ -547,7 +547,7 @@ object CB01Provider : Provider {
 
         return body.select("p").mapNotNull { p ->
             val text = p.text().trim()
-            val epNum = Regex("(\\d+)[x×](\\d+)").find(text)?.groupValues?.getOrNull(2)?.toIntOrNull()
+            val epNum = Regex("(\\d+)[xÃ—](\\d+)").find(text)?.groupValues?.getOrNull(2)?.toIntOrNull()
                 ?: return@mapNotNull null
 
             val tmdbEp = tmdbEpisodes.find { it.number == epNum }
@@ -601,8 +601,8 @@ object CB01Provider : Provider {
             val b64Val = Regex("""decodedEncryptedVal\s*=\s*atob\(["']([^"']+)["']\)""").find(html)?.groupValues?.getOrNull(1)
 
             if (!b64Base.isNullOrBlank() && !b64Val.isNullOrBlank()) {
-                val decodedBase = String(android.util.Base64.decode(b64Base, android.util.Base64.DEFAULT), Charsets.UTF_8)
-                val decodedVal = String(android.util.Base64.decode(b64Val, android.util.Base64.DEFAULT), Charsets.UTF_8)
+                val decodedBase = String(java.util.Base64.getDecoder().decode(b64Base), Charsets.UTF_8)
+                val decodedVal = String(java.util.Base64.getDecoder().decode(b64Val), Charsets.UTF_8)
                 val maxstreamUrl = decodedBase + decodedVal
                 if (maxstreamUrl.isNotBlank()) return maxstreamUrl
             }
@@ -759,7 +759,7 @@ object CB01Provider : Provider {
 
                 val line = body.select("p").firstOrNull { para ->
                     val text = para.text().trim()
-                    Regex("(\\d+)[x×](\\d+)").find(text)?.groupValues?.getOrNull(2)?.toIntOrNull() == episodeNum
+                    Regex("(\\d+)[xÃ—](\\d+)").find(text)?.groupValues?.getOrNull(2)?.toIntOrNull() == episodeNum
                 } ?: return emptyList()
 
                 val servers = mutableListOf<Video.Server>()

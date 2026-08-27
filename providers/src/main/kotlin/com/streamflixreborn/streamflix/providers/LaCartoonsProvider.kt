@@ -69,7 +69,7 @@ object LaCartoonsProvider : Provider {
         for (container in containers) {
             val links = container.select("a[href^=/serie/], a[href*=/serie/]")
             for (a in links) {
-            val href = a.attr("href").ifBlank { continue }
+            val href = a.attr("href"); if (href.isBlank()) continue
             val card = a.selectFirst("div.serie") ?: continue
             val img = card.selectFirst("img")?.attr("src").orEmpty()
             val title = card.selectFirst("p.nombre-serie")?.text().orElse("")
@@ -127,7 +127,7 @@ object LaCartoonsProvider : Provider {
     }
 
     override suspend fun getMovie(id: String): Movie {
-        throw Exception("La Cartoons no ofrece películas, solo series")
+        throw Exception("La Cartoons no ofrece pelÃ­culas, solo series")
     }
 
     override suspend fun getTvShow(id: String): TvShow {
@@ -139,7 +139,7 @@ object LaCartoonsProvider : Provider {
             ?: doc.selectFirst("p.nombre-serie")?.text()?.trim()
             ?: doc.selectFirst("h1,h2,h3")?.text()?.trim().orEmpty()
         val infoSection = doc.selectFirst("div.informacion-serie-seccion")
-        val overview = infoSection?.select("p")?.firstOrNull { it.text().startsWith("Reseña") }
+        val overview = infoSection?.select("p")?.firstOrNull { it.text().startsWith("ReseÃ±a") }
             ?.selectFirst("span")?.text()
         val ratingText = infoSection?.selectFirst("span.valoracion1")?.ownText()?.trim()
         val rating = ratingText?.toDoubleOrNull()
@@ -187,7 +187,7 @@ object LaCartoonsProvider : Provider {
             doc.select("ul.listas-de-episodion li a")
         }
         for (a in episodeLinks) {
-            val href = a.attr("href").ifBlank { continue }
+            val href = a.attr("href"); if (href.isBlank()) continue
             val text = a.text().trim()
             val number = extractEpisodeNumber(text)
             val absoluteId = if (href.startsWith("http")) href else "$baseUrl$href"
@@ -227,7 +227,7 @@ object LaCartoonsProvider : Provider {
     }
 
     override suspend fun getPeople(id: String, page: Int): People {
-        throw Exception("Esta función no está disponible en La Cartoons")
+        throw Exception("Esta funciÃ³n no estÃ¡ disponible en La Cartoons")
     }
 
     override suspend fun getServers(id: String, videoType: Video.Type): List<Video.Server> {

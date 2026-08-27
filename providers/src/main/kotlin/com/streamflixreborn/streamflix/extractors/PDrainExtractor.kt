@@ -2,7 +2,6 @@ package com.streamflixreborn.streamflix.extractors
 
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.models.Video
-import androidx.media3.common.MimeTypes
 import java.lang.Exception
 
 class PDrainExtractor : Extractor() {
@@ -20,7 +19,7 @@ class PDrainExtractor : Extractor() {
 
             return Video(
                 source = videoSource,
-                type = MimeTypes.VIDEO_MP4, // PixelDrain sirve MP4 por defecto en su API
+                type = "video/mp4", // PixelDrain sirve MP4 por defecto en su API
                 headers = mapOf(
                     "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                     "Referer" to link,

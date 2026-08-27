@@ -1,6 +1,5 @@
 package com.streamflixreborn.streamflix.providers
 
-import android.text.Html
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.ApiVoirFilmExtractor
@@ -47,20 +46,20 @@ object UnJourUnFilmProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
     override val portalUrl: String = defaultPortalUrl
         get() {
             val cachePortalURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_PORTAL_URL)
-            return cachePortalURL.ifEmpty { field }
+            return cachePortalURL?.ifEmpty { field } ?: field
         }
 
     override val defaultBaseUrl: String = "https://1jour1film0126b.site/"
     override val baseUrl: String = defaultBaseUrl
         get() {
             val cacheURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_URL)
-            return cacheURL.ifEmpty { field }
+            return cacheURL?.ifEmpty { field } ?: field
         }
 
     override val logo: String
         get() {
             val cacheLogo = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_LOGO)
-            return cacheLogo.ifEmpty { portalUrl + "wp-content/uploads/2025/07/1J1F-150x150.jpg" }
+            return cacheLogo?.ifEmpty { portalUrl + "wp-content/uploads/2025/07/1J1F-150x150.jpg" } ?: (portalUrl + "wp-content/uploads/2025/07/1J1F-150x150.jpg")
         }
     override val language = "fr"
     override val changeUrlMutex = Mutex()
@@ -383,7 +382,7 @@ object UnJourUnFilmProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
 
     fun decodeHtml(s: String): String {
         @Suppress("DEPRECATION")
-        val text = Html.fromHtml(s).toString()
+        val text = org.jsoup.Jsoup.parse(s).text()
         return JSONObject("""{"v":"$text"}""").getString("v")
     }
 

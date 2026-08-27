@@ -42,23 +42,20 @@ object FrenchStreamProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
 
     override val defaultPortalUrl: String = "https://fstream.info/"
 
-    override val portalUrl: String = defaultPortalUrl
+    override val portalUrl: String
         get() {
-            val cachePortalURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_PORTAL_URL)
-            return cachePortalURL.ifEmpty { field }
+            return defaultPortalUrl
         }
 
     override val defaultBaseUrl: String = "https://fs16.lol/"
-    override val baseUrl: String = defaultBaseUrl
+    override val baseUrl: String
         get() {
-            val cacheURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_URL)
-            return cacheURL.ifEmpty { field }
+            return defaultBaseUrl
         }
 
     override val logo: String
         get() {
-            val cacheLogo = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_LOGO)
-            return cacheLogo.ifEmpty { portalUrl + "favicon-96x96.png" }
+            return "/favicon-32x32.png"
         }
     override val language = "fr"
     override val changeUrlMutex = Mutex()
@@ -128,7 +125,7 @@ object FrenchStreamProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
         } else {
             categories.add(
                 Category(
-                    name = "Nouveautés Séries",
+                    name = "NouveautÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©ries",
                     list = document.select("div.pages.clearfix").getOrNull(1)?.select("div.short")
                         ?.map {
                             TvShow(
@@ -149,7 +146,7 @@ object FrenchStreamProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
 
             categories.add(
                 Category(
-                    name = "Nouveautés Films",
+                    name = "NouveautÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s Films",
                     list = document.select("div.pages.clearfix").getOrNull(0)?.select("div.short")
                         ?.map {
                             Movie(

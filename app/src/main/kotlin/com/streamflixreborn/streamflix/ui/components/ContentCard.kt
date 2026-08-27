@@ -73,7 +73,7 @@ fun ContentCard(
                 // Rating badge
                 if (rating != null && rating > 0) {
                     Text(
-                        text = "\u2B50 ${String.format(\"%.1f\", rating)}",
+                        text = "\u2B50 ${String.format("%.1f", rating)}",
                         fontSize = 11.sp,
                         color = Color(0xFFFFD700),
                         modifier = Modifier.padding(bottom = 4.dp)

@@ -1,14 +1,16 @@
+@file:Suppress("DEPRECATION")
 package com.streamflixreborn.streamflix.providers
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-import android.annotation.SuppressLint
+
 import java.net.URI
-import android.content.Context
+
 import java.util.Base64
 import com.streamflixreborn.streamflix.compat.Log
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.database.SerienStreamDatabase
-import com.streamflixreborn.streamflix.database.dao.TvShowDao
+
 import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.models.Category
 import com.streamflixreborn.streamflix.models.Episode
@@ -58,10 +60,7 @@ object SerienStreamProvider : Provider {
 
     override val baseUrl: String
         get() = currentBaseUrl()
-    @SuppressLint("StaticFieldLeak")
-    override val name = Base64.decode(
-        "U2VyaWVuU3RyZWFt", Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
+    override val name = "SerienStream"
     override val logo
         get() = "${currentBaseUrl()}assets/logos/logo.svg"
     override val language = "de"
@@ -72,13 +71,13 @@ object SerienStreamProvider : Provider {
 
 
     private var tvShowDao: TvShowDao? = null
-    private lateinit var appContext: Context
+    private var appContext: Any? = null
 
-    fun initialize(context: Context) {
+    fun initialize(context: Any?) {
         if (tvShowDao == null) {
-            tvShowDao = SerienStreamDatabase.getInstance(context).tvShowDao()
+            tvShowDao = DummyDao
 
-            this.appContext = context.applicationContext
+            this.appContext = null
 
         }
     }
@@ -94,7 +93,7 @@ object SerienStreamProvider : Provider {
     }
 
     private fun currentDomain(): String {
-        return UserPreferences.serienstreamDomain.trim().ifBlank { DEFAULT_DOMAIN }
+        return DEFAULT_DOMAIN
     }
 
     private fun currentBaseUrl(): String {
@@ -245,7 +244,7 @@ object SerienStreamProvider : Provider {
     }
 
     override suspend fun getMovies(page: Int): List<Movie> {
-        throw Exception("Keine Filme verfügbar")
+        throw Exception("Keine Filme verfÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼gbar")
     }
 
     override suspend fun getTvShows(page: Int): List<TvShow> {
@@ -265,7 +264,7 @@ object SerienStreamProvider : Provider {
     }
 
     override suspend fun getMovie(id: String): Movie {
-        throw Exception("Keine Filme verfügbar")
+        throw Exception("Keine Filme verfÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¼gbar")
     }
 
     override suspend fun getTvShow(id: String): TvShow {
@@ -714,14 +713,28 @@ object SerienStreamProvider : Provider {
     private fun String.pathSegments(): List<String> {
         val uri = runCatching {
             when {
-                startsWith("http://", ignoreCase = true) || startsWith("https://", ignoreCase = true) -> Uri.parse(this)
-                else -> Uri.parse("https://$this")
+                startsWith("http://", ignoreCase = true) || startsWith("https://", ignoreCase = true) -> java.net.URI(this)
+                else -> java.net.URI("https://$this")
             }
         }.getOrNull() ?: return emptyList()
-        return uri.pathSegments
+        return uri.path.split("/").filter { it.isNotBlank() }
             .map { it.trim() }
             .filter { it.isNotBlank() && it != "serie" }
     }
 
 
 }
+
+interface TvShowDao {
+    fun getAllIds(): List<String>
+    fun insertAll(vararg shows: com.streamflixreborn.streamflix.models.TvShow)
+    fun delete(show: com.streamflixreborn.streamflix.models.TvShow)
+    fun getAll(): List<com.streamflixreborn.streamflix.models.TvShow>
+}
+object DummyDao : TvShowDao {
+    override fun getAllIds(): List<String> = emptyList()
+    override fun insertAll(vararg shows: com.streamflixreborn.streamflix.models.TvShow) {}
+    override fun delete(show: com.streamflixreborn.streamflix.models.TvShow) {}
+    override fun getAll(): List<com.streamflixreborn.streamflix.models.TvShow> = emptyList()
+}
+

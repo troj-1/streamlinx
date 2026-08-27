@@ -2,7 +2,6 @@ package com.streamflixreborn.streamflix.extractors
 
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.models.Video
-import androidx.media3.common.MimeTypes
 import okhttp3.ResponseBody
 import org.jsoup.nodes.Document
 import retrofit2.Response
@@ -24,7 +23,7 @@ class ZillaExtractor : Extractor() {
 
             return Video(
                 source = "$mainUrl/m3u8/$id",
-                type = MimeTypes.APPLICATION_M3U8,
+                type = "application/x-mpegURL",
                 headers = mapOf(
                     "User-Agent" to "Mozilla/5.0 (X11; Linux x86_64; rv:148.0) Gecko/20100101 Firefox/148.0",
                     "Accept" to "*/*",

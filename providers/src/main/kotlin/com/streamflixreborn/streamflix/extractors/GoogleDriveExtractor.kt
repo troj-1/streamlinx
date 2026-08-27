@@ -1,6 +1,5 @@
 package com.streamflixreborn.streamflix.extractors
 
-import androidx.media3.common.MimeTypes
 import com.google.gson.JsonParser
 import com.streamflixreborn.streamflix.models.Video
 import okhttp3.OkHttpClient
@@ -66,7 +65,7 @@ class GoogleDriveExtractor : Extractor() {
         return Video(
             source = hlsManifestUrl,
             headers = headers,
-            type = MimeTypes.APPLICATION_M3U8
+            type = "application/x-mpegURL"
         )
     }
 

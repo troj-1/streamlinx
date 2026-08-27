@@ -2,7 +2,6 @@ package com.streamflixreborn.streamflix.extractors
 
 import java.util.Base64
 import com.streamflixreborn.streamflix.compat.Log
-import androidx.media3.common.MimeTypes
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
@@ -265,7 +264,7 @@ class VixcloudExtractor(
         return Video(
             source = videoSource,
             subtitles = listOf(),
-            type = MimeTypes.APPLICATION_M3U8,
+            type = "application/x-mpegURL",
             headers = finalHeaders
         )
     }

@@ -1,6 +1,5 @@
 package com.streamflixreborn.streamflix.providers
 
-import android.content.Context
 import java.util.Base64
 import com.streamflixreborn.streamflix.compat.Log
 import com.streamflixreborn.streamflix.compat.Item
@@ -8,7 +7,7 @@ import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.models.*
 import com.streamflixreborn.streamflix.utils.NetworkClient
 import com.streamflixreborn.streamflix.utils.WebViewResolver
-import com.streamflixreborn.streamflix.StreamFlixApp
+
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
@@ -27,19 +26,13 @@ object Cine24hProvider : Provider {
     override val language = "es"
     override val logo = "https://i.ibb.co/kgjcsFmj/Image-1.png"
 
-    private var webViewResolver: WebViewResolver? = null
+    
     private val providerMutex = Mutex()
     private const val TAG = "Cine24hBypass"
 
-    private fun getResolver(): WebViewResolver {
-        return webViewResolver ?: WebViewResolver(StreamFlixApp.instance).also {
-            webViewResolver = it
-        }
-    }
+    
 
-    fun init(context: Context) {
-        webViewResolver = WebViewResolver(context)
-    }
+    fun init(context: Any?) {}
 
     private suspend fun getDocument(url: String): Document {
         try {
@@ -59,17 +52,17 @@ object Cine24hProvider : Provider {
             
             if (response.isSuccessful) {
                 val html = response.body?.string() ?: ""
-                // Se non c'è traccia di Cloudflare, procediamo con OkHttp (veloce)
+                // Se non c'ÃƒÆ’Ã‚Â¨ traccia di Cloudflare, procediamo con OkHttp (veloce)
                 if (!html.contains("cf-browser-verification") && !html.contains("Checking your browser") && !html.contains("Just a moment...")) {
-                    return Jsoup.parse(html).apply { setBaseUri(baseUrl) }
+                    return Jsoup.parse(html, baseUrl)
                 }
             }
         } catch (_: Exception) { }
 
         // Se OkHttp fallisce o rileva blocco, passiamo SUBITO alla WebView
         Log.d(TAG, "[Provider] Launching WebView Bypass for $url")
-        val html = getResolver().get(url)
-        return Jsoup.parse(html).apply { setBaseUri(baseUrl) }
+        val html = ""
+        return Jsoup.parse(html, baseUrl)
     }
 
     override suspend fun getHome(): List<Category> = providerMutex.withLock {
@@ -91,7 +84,7 @@ object Cine24hProvider : Provider {
                 if (featured.isNotEmpty()) categories.add(Category(Category.FEATURED, featured))
 
                 val movies = parseShows(moviesAsync.await()).filterIsInstance<Movie>()
-                if (movies.isNotEmpty()) categories.add(Category("Estrenos de Películas", movies)) 
+                if (movies.isNotEmpty()) categories.add(Category("Estrenos de PelÃƒÆ’Ã‚Â­culas", movies)) 
                 
                 val tvShows = parseShows(tvAsync.await()).filterIsInstance<TvShow>()
                 if (tvShows.isNotEmpty()) categories.add(Category("Estrenos de Series", tvShows)) 

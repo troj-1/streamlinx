@@ -1,6 +1,5 @@
 package com.streamflixreborn.streamflix.extractors
 
-import androidx.media3.common.MimeTypes
 import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.utils.DnsResolver
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
@@ -46,7 +45,7 @@ class GxPlayerExtractor : Extractor() {
                 "User-Agent" to DEFAULT_USER_AGENT,
                 "Referer" to mainUrl
             ),
-            type = MimeTypes.APPLICATION_M3U8
+            type = "application/x-mpegURL"
         )
     }
 

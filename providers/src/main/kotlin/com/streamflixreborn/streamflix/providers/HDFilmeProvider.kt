@@ -154,16 +154,16 @@ object HDFilmeProvider : Provider {
             }
         }
 
-        val latestMoviesSection = doc.selectFirst("section.sidebar-section:has(h3:containsOwn(neueste Filme eingefügt))")
+        val latestMoviesSection = doc.selectFirst("section.sidebar-section:has(h3:containsOwn(neueste Filme eingefÃƒÆ’Ã‚Â¼gt))")
         val latestMoviesItems = latestMoviesSection?.select("div.listing > a")?.mapNotNull { parseSidebarItemAsMovie(it) } ?: emptyList()
         if (latestMoviesItems.isNotEmpty()) {
-            categories.add(Category(name = "Neueste Filme Eingefügt", list = latestMoviesItems))
+            categories.add(Category(name = "Neueste Filme EingefÃƒÆ’Ã‚Â¼gt", list = latestMoviesItems))
         }
 
-        val latestSeriesSection = doc.selectFirst("section.sidebar-section:has(h3:containsOwn(neueste Serie eingefügt))")
+        val latestSeriesSection = doc.selectFirst("section.sidebar-section:has(h3:containsOwn(neueste Serie eingefÃƒÆ’Ã‚Â¼gt))")
         val latestSeriesItems = latestSeriesSection?.select("div.listing > a")?.mapNotNull { parseSidebarItemAsTvShow(it) } ?: emptyList()
         if (latestSeriesItems.isNotEmpty()) {
-            categories.add(Category(name = "Neueste Serie Eingefügt", list = latestSeriesItems))
+            categories.add(Category(name = "Neueste Serie EingefÃƒÆ’Ã‚Â¼gt", list = latestSeriesItems))
         }
 
         return categories
@@ -402,7 +402,7 @@ object HDFilmeProvider : Provider {
     }
 
     private fun parseSitemap(body: ResponseBody): List<SitemapEntry> = body.use { responseBody ->
-        val parser = android.util.Xml.newPullParser().apply {
+        val parser = org.xmlpull.v1.XmlPullParserFactory.newInstance().newPullParser().apply {
             setInput(responseBody.charStream())
         }
         val entries = ArrayList<SitemapEntry>()

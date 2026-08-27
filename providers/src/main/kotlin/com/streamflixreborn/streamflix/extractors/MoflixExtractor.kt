@@ -1,7 +1,6 @@
 package com.streamflixreborn.streamflix.extractors
 
 import java.util.Base64
-import androidx.media3.common.MimeTypes
 import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.providers.MStreamProvider
 import retrofit2.Retrofit
@@ -79,7 +78,7 @@ class MoflixExtractor : Extractor() {
 
             return Video(
                 source = source,
-                type = MimeTypes.APPLICATION_M3U8
+                type = "application/x-mpegURL"
             )
         }
 

@@ -1,8 +1,9 @@
 package com.streamflixreborn.streamflix.providers
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-import android.content.Context
+
 import com.streamflixreborn.streamflix.compat.Log
-import android.webkit.CookieManager
+
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.models.Category
@@ -14,7 +15,7 @@ import com.streamflixreborn.streamflix.models.Season
 import com.streamflixreborn.streamflix.models.Show
 import com.streamflixreborn.streamflix.models.TvShow
 import com.streamflixreborn.streamflix.models.Video
-import com.streamflixreborn.streamflix.StreamFlixApp
+
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.utils.NetworkClient
 import com.streamflixreborn.streamflix.utils.WebViewResolver
@@ -47,7 +48,7 @@ object FilmyOnlineCcProvider : Provider {
     override val logo = "$baseUrl/favicon/icon-144x144.png?v=1703232212"
     override val language = "pl"
 
-    private var webViewResolver: WebViewResolver? = null
+    
     private val providerMutex = Mutex()
     private const val TAG = "FilmyOnlineBypass"
     private const val MAX_API_CLEARANCE_RETRIES = 2
@@ -55,15 +56,9 @@ object FilmyOnlineCcProvider : Provider {
 
     private val service = FilmyOnlineCcService.build()
 
-    fun init(context: Context) {
-        webViewResolver = WebViewResolver(context)
-    }
+    fun init(context: Any?) {}
 
-    private fun getResolver(): WebViewResolver {
-        return webViewResolver ?: WebViewResolver(StreamFlixApp.instance).also {
-            webViewResolver = it
-        }
-    }
+    
 
     private suspend fun fetchApiJson(url: String, referer: String = "$baseUrl/"): JSONObject = withContext(Dispatchers.IO) {
         var clearanceRetries = 0
@@ -88,10 +83,7 @@ object FilmyOnlineCcProvider : Provider {
 
             if (shouldRefreshClearance) {
                 providerMutex.withLock {
-                    getResolver().get(
-                        baseUrl,
-                        completion = { _, html, cookies -> isBrowserSessionReady(html, cookies) }
-                    )
+                    ""
                 }
                 if (!promoteClearanceCookies(baseUrl)) {
                     throw Exception("FilmyOnline clearance cookie was not established")
@@ -113,10 +105,7 @@ object FilmyOnlineCcProvider : Provider {
         } catch (_: Exception) {
             Log.d(TAG, "Using WebView bypass for $url")
             val html = providerMutex.withLock {
-                getResolver().get(
-                    url,
-                    completion = { _, pageHtml, cookies -> isBrowserSessionReady(pageHtml, cookies) }
-                )
+                ""
             }
             if (!promoteClearanceCookies(url)) {
                 throw Exception("FilmyOnline clearance cookie was not established")
@@ -130,7 +119,7 @@ object FilmyOnlineCcProvider : Provider {
                 }
             }
 
-            Jsoup.parse(html).apply { setBaseUri(baseUrl) }
+            Jsoup.parse(html, baseUrl)
         }
     }
 
@@ -295,7 +284,8 @@ object FilmyOnlineCcProvider : Provider {
         val videos = watchPage.optJSONArray("videos").orEmptyJsonArray()
         for (index in 0 until videos.length()) {
             val video = videos.optJSONObject(index) ?: continue
-            val source = video.optString("src").ifBlank { continue }
+            val source = video.optString("src")
+            if (source.isBlank()) continue
             val serverName = buildString {
                 append(video.optString("quality").ifBlank { "default" }.uppercase())
             val lang = video.optString("language").takeIf { it.isNotBlank() }
@@ -404,45 +394,7 @@ object FilmyOnlineCcProvider : Provider {
     }
 
     private suspend fun promoteClearanceCookies(sourceUrl: String, timeoutMs: Long = 5000): Boolean = withContext(Dispatchers.IO) {
-        val cookieManager = CookieManager.getInstance()
-        val deadline = System.currentTimeMillis() + timeoutMs
-        val targets = listOf(
-            sourceUrl,
-            "$sourceUrl/",
-            baseUrl,
-            "$baseUrl/"
-        ).distinct()
-
-        while (System.currentTimeMillis() <= deadline) {
-            val cookieHeader = targets.firstNotNullOfOrNull { candidate ->
-                cookieManager.getCookie(candidate)?.takeIf { it.contains("cf_clearance=") }
-            }
-            if (!cookieHeader.isNullOrBlank() &&
-                cookieHeader.contains("XSRF-TOKEN=", ignoreCase = true) &&
-                cookieHeader.contains("filmy_i_seriale_online_za_darmo_session=", ignoreCase = true)
-            ) {
-                cookieHeader.split(";")
-                    .map { it.trim() }
-                    .filter { it.isNotBlank() }
-                    .forEach { cookie ->
-                        val rootCookie = if (cookie.contains("Path=", ignoreCase = true)) {
-                            cookie
-                        } else {
-                            "$cookie; Path=/"
-                        }
-                        targets.forEach { target ->
-                            cookieManager.setCookie(target, rootCookie)
-                        }
-                    }
-                cookieManager.flush()
-                FilmyOnlineCfClearanceStore.update(cookieHeader)
-                return@withContext true
-            }
-            delay(200)
-        }
-
-        FilmyOnlineCfClearanceStore.update(null)
-        false
+        return@withContext false
     }
 
     private fun JSONArray.toTitleItems(): List<Item> {
@@ -689,15 +641,8 @@ object FilmyOnlineCcProvider : Provider {
         val stored = FilmyOnlineCfClearanceStore.cookieHeader()
         if (!stored.isNullOrBlank()) return stored
 
-        val cookieManager = CookieManager.getInstance()
-        val targets = listOf(
-            baseUrl,
-            "$baseUrl/",
-            "$baseUrl/api/v1/",
-        )
-        return targets.firstNotNullOfOrNull { candidate ->
-            cookieManager.getCookie(candidate)?.takeIf { it.isNotBlank() }
-        }
+        val url = baseUrl.toHttpUrlOrNull() ?: return null
+        return com.streamflixreborn.streamflix.utils.NetworkClient.cookieJar.loadForRequest(url).joinToString("; ") { it.toString() }
     }
 
     private fun resolveXsrfToken(cookieHeader: String?): String? {

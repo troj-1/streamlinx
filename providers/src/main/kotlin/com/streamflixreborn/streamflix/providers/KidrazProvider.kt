@@ -37,20 +37,20 @@ object KidrazProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
     override val portalUrl: String = defaultPortalUrl
         get() {
             val cachePortalURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_PORTAL_URL)
-            return cachePortalURL.ifEmpty{ field }
+            return cachePortalURL?.ifEmpty{ field } ?: field
         }
 
     override val defaultBaseUrl: String = "https://www.kidraz.com/saby1jy/home/kidraz"
     override val baseUrl: String = defaultBaseUrl
         get() {
             val cacheURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_URL)
-            return cacheURL.ifEmpty{ field }
+            return cacheURL?.ifEmpty{ field } ?: field
         }
 
     override val logo: String
         get() {
             var cacheLogo = UserPreferences.getProviderCache(this,UserPreferences.PROVIDER_LOGO)
-            return cacheLogo.ifEmpty { "https://www.kidraz.com/favicon.png" }
+            return cacheLogo?.ifEmpty { portalUrl + "wp-content/uploads/2025/07/Kidraz-150x150.png" } ?: (portalUrl + "wp-content/uploads/2025/07/Kidraz-150x150.png")
         }
 
     const val user_agent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"

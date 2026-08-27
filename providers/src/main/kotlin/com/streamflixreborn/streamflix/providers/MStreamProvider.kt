@@ -21,7 +21,7 @@ import okhttp3.OkHttpClient
 import okhttp3.OkHttpClient.Builder
 import okhttp3.ResponseBody
 import okhttp3.dnsoverhttps.DnsOverHttps
-import okhttp3.logging.HttpLoggingInterceptor
+
 import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Retrofit
@@ -37,18 +37,10 @@ import kotlin.String
 object MStreamProvider : Provider {
     private const val DEFAULT_DOMAIN = "moflix-stream.xyz"
 
-    private val LEGACY_URL = Base64.decode(
-        "aHR0cHM6Ly9tb2ZsaXg=", Base64.NO_WRAP
-    ).toString(Charsets.UTF_8) + Base64.decode(
-        "LXN0cmVhbS54eXo=", Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
+    private val LEGACY_URL = String(java.util.Base64.getDecoder().decode("aHR0cHM6Ly9tb2ZsaXg="), Charsets.UTF_8) + String(java.util.Base64.getDecoder().decode("LXN0cmVhbS54eXo="), Charsets.UTF_8)
     override val baseUrl: String
         get() = currentBaseUrl()
-    override val name = Base64.decode(
-        "TW9mbGl4", Base64.NO_WRAP
-    ).toString(Charsets.UTF_8) + Base64.decode(
-        "LXN0cmVhbQ==", Base64.NO_WRAP
-    ).toString(Charsets.UTF_8)
+    override val name = String(java.util.Base64.getDecoder().decode("TW9mbGl4"), Charsets.UTF_8) + String(java.util.Base64.getDecoder().decode("LXN0cmVhbQ=="), Charsets.UTF_8)
 
     override val logo
         get() = "${currentBaseUrl()}storage/branding_media/b0d168ea-8d1b-4b40-9292-65e9a600d3c6.png"
@@ -60,7 +52,7 @@ object MStreamProvider : Provider {
     private var serviceBaseUrl: String? = null
 
     private fun currentDomain(): String {
-        return UserPreferences.moflixDomain.trim().ifBlank { DEFAULT_DOMAIN }
+        return DEFAULT_DOMAIN
     }
 
     private fun currentBaseUrl(): String {
@@ -209,7 +201,7 @@ object MStreamProvider : Provider {
             "Abenteuer",
             "Familie",
             "Fantasy",
-            "Komödie",
+            "KomÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¶die",
             "Thriller",
             "Krimi",
             "Mystery",

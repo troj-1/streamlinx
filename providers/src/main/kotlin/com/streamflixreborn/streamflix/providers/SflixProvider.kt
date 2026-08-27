@@ -1,7 +1,7 @@
 package com.streamflixreborn.streamflix.providers
 
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
-import com.streamflixreborn.streamflix.BuildConfig
+
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.models.Category

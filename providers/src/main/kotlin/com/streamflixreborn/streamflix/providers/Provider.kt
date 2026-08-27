@@ -59,7 +59,7 @@ interface Provider {
             val tvShows: Boolean
         )
 
-        val providers = mapOf(
+        val providers: Map<Provider, ProviderSupport> = mapOf(
             SflixProvider to ProviderSupport(movies = true, tvShows = true),
             FanpelisProvider to ProviderSupport(movies = true, tvShows = true),
             SerienStreamProvider to ProviderSupport(movies = false, tvShows = true),
@@ -67,7 +67,6 @@ interface Provider {
             StreamingCommunityProvider("en") to ProviderSupport(movies = true, tvShows = true),
             AnimeWorldProvider to ProviderSupport(movies = true, tvShows = true),
             MkissaProvider to ProviderSupport(movies = true, tvShows = true),
-            AniWorldProvider to ProviderSupport(movies = false, tvShows = true),
             RidomoviesProvider to ProviderSupport(movies = true, tvShows = true),
             AnikotoProvider to ProviderSupport(movies = true, tvShows = true),
             WiflixProvider to ProviderSupport(movies = true, tvShows = true),
@@ -88,7 +87,6 @@ interface Provider {
             JKAnimeProvider to ProviderSupport(movies = true, tvShows = true),
             TioAnimeProvider to ProviderSupport(movies = true, tvShows = true),
             AnimeAv1Provider to ProviderSupport(movies = false, tvShows = true),
-            AnimeOnlineNinjaProvider to ProviderSupport(movies = true, tvShows = true),
             SoloLatinoProvider to ProviderSupport(movies = true, tvShows = true),
             Cine24hProvider to ProviderSupport(movies = true, tvShows = true),
             PelisplustoProvider to ProviderSupport(movies = true, tvShows = true),

@@ -38,15 +38,13 @@ object FrenchMangaProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
     override val defaultBaseUrl: String = "https://w16.french-manga.net/"
     override val defaultPortalUrl: String = "http://fstream.info/"
 
-    override val portalUrl: String = defaultPortalUrl
+    override val portalUrl: String
         get() {
-            val cachePortalURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_PORTAL_URL)
-            return cachePortalURL.ifEmpty { field }
+            return defaultPortalUrl
         }
-    override val baseUrl: String = FrenchMangaProvider.defaultBaseUrl
+    override val baseUrl: String
         get() {
-            val cacheURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_URL)
-            return cacheURL.ifEmpty { field }
+            return defaultBaseUrl
         }
 
     override val logo: String
@@ -125,7 +123,7 @@ object FrenchMangaProvider : Provider, ProviderPortalUrl, ProviderConfigUrl {
                     ?.attr("src")
                     ?: ""
 
-                if (title.contains(" - Saison ") || title.contains(" - Intégrale "))
+                if (title.contains(" - Saison ") || title.contains(" - IntÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©grale "))
                     TvShow(
                         id = id,
                         title = title,

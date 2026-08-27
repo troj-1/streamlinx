@@ -1,8 +1,10 @@
+@file:Suppress("DEPRECATION")
 package com.streamflixreborn.streamflix.providers
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 import com.streamflixreborn.streamflix.compat.Log
-import androidx.core.net.toUri
-import com.streamflixreborn.streamflix.StreamFlixApp
+
+
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.models.*
@@ -22,19 +24,16 @@ import kotlinx.coroutines.*
 
 object PoseidonHD2Provider : Provider {
 
-    override val baseUrl: String get() = "https://${UserPreferences.poseidonDomain}"
+    private const val DEFAULT_DOMAIN = "poseidonhd2.com"
+    override val baseUrl: String get() = "https://${DEFAULT_DOMAIN}"
     override val name = "Poseidonhd2"
     override val logo: String get() = "$baseUrl/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fposeidonhd2.86e0c298.png&w=640&q=75"
     override val language = "es"
 
     private const val TAG = "PoseidonHD2"
-    private var webViewResolver: WebViewResolver? = null
+    
 
-    private fun getResolver(): WebViewResolver {
-        return webViewResolver ?: WebViewResolver(StreamFlixApp.instance).also {
-            webViewResolver = it
-        }
-    }
+    
 
     private suspend fun getDocument(url: String): Document {
         try {
@@ -51,9 +50,9 @@ object PoseidonHD2Provider : Provider {
                             } else {
                                 null
                             }
-                            if (!newHost.isNullOrEmpty() && newHost != UserPreferences.poseidonDomain) {
-                                Log.d(TAG, "Domain changed from ${UserPreferences.poseidonDomain} to $newHost")
-                                UserPreferences.poseidonDomain = newHost
+                            if (!newHost.isNullOrEmpty() && newHost != DEFAULT_DOMAIN) {
+                                Log.d(TAG, "Domain changed from ${DEFAULT_DOMAIN} to $newHost")
+                                // DEFAULT_DOMAIN = newHost
                             }
                         }
                     }
@@ -79,7 +78,7 @@ object PoseidonHD2Provider : Provider {
             Log.e(TAG, "OkHttp failed for $url, trying WebView")
         }
 
-        val html = getResolver().get(url)
+        val html = com.streamflixreborn.streamflix.utils.WebViewResolver.resolve(url) ?: ""
         return Jsoup.parse(html).apply { setBaseUri(baseUrl) }
     }
 
@@ -99,7 +98,7 @@ object PoseidonHD2Provider : Provider {
             
             val images = item.optJSONObject("images")
             val rawPoster = images?.optString("poster") ?: item.optString("image") ?: ""
-            val imgUrl = rawPoster.toUri().getQueryParameter("url") ?: rawPoster
+            val imgUrl = (rawPoster ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawPoster
             val poster = if (imgUrl.startsWith("http")) imgUrl 
                          else if (imgUrl.isNotEmpty()) "${baseUrl.trimEnd('/')}/${imgUrl.trimStart('/')}" 
                          else null
@@ -133,9 +132,9 @@ object PoseidonHD2Provider : Provider {
 
         // 2. TABS (Movies)
         val tabMap = listOf(
-            "tabLastMovies" to "Últimas películas",
-            "tabTopMovies" to "Películas destacadas",
-            "tabLastReleasedMovies" to "Estrenos de películas"
+            "tabLastMovies" to "ÃƒÅ¡ltimas pelÃƒÂ­culas",
+            "tabTopMovies" to "PelÃƒÂ­culas destacadas",
+            "tabLastReleasedMovies" to "Estrenos de pelÃƒÂ­culas"
         )
         for ((key, name) in tabMap) {
             json.optJSONArray(key)?.let { array ->
@@ -147,7 +146,7 @@ object PoseidonHD2Provider : Provider {
         // 3. SERIES
         json.optJSONArray("series")?.let { array ->
             val list = (0 until array.length()).mapNotNull { i -> parseNextItem(array.getJSONObject(i)) }
-            if (list.isNotEmpty()) categories.add(Category("Últimas series", list))
+            if (list.isNotEmpty()) categories.add(Category("ÃƒÅ¡ltimas series", list))
         }
         
         json.optJSONArray("topSeriesDay")?.let { array ->
@@ -163,7 +162,7 @@ object PoseidonHD2Provider : Provider {
                 val seriesId = slug.substringAfter("series/").substringBefore("/seasons")
                 val title = item.optString("title")
                 val rawPoster = item.optString("image")
-                val imgUrl = rawPoster.toUri().getQueryParameter("url") ?: rawPoster
+                val imgUrl = (rawPoster ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawPoster
                 val poster = if (imgUrl.startsWith("http")) imgUrl else "${baseUrl.trimEnd('/')}/${imgUrl.trimStart('/')}"
                 TvShow(
                     id = seriesId,
@@ -171,7 +170,7 @@ object PoseidonHD2Provider : Provider {
                     poster = poster
                 )
             }
-            if (list.isNotEmpty()) categories.add(Category("Últimos episodios", list))
+            if (list.isNotEmpty()) categories.add(Category("ÃƒÅ¡ltimos episodios", list))
         }
 
         return categories
@@ -180,16 +179,16 @@ object PoseidonHD2Provider : Provider {
     override suspend fun search(query: String, page: Int): List<Item> {
         if (query.isEmpty()) {
             return listOf(
-                Genre("accion", "Acción"),
-                Genre("animacion", "Animación"),
+                Genre("accion", "AcciÃƒÂ³n"),
+                Genre("animacion", "AnimaciÃƒÂ³n"),
                 Genre("crimen", "Crimen"),
-                Genre("familia", "Fámilia"),
+                Genre("familia", "FÃƒÂ¡milia"),
                 Genre("misterio", "Misterio"),
                 Genre("suspenso", "Suspenso"),
                 Genre("aventura", "Aventura"),
-                Genre("ciencia-ficcion", "Ciencia Ficción"),
+                Genre("ciencia-ficcion", "Ciencia FicciÃƒÂ³n"),
                 Genre("drama", "Drama"),
-                Genre("fantasia", "Fantasía"),
+                Genre("fantasia", "FantasÃƒÂ­a"),
                 Genre("romance", "Romance"),
                 Genre("terror", "Terror")
             )
@@ -209,7 +208,7 @@ object PoseidonHD2Provider : Provider {
                 ?: element.selectFirst("span")?.text() ?: ""
             
             val rawImgUrl = element.selectFirst("img")?.attr("src") ?: ""
-            val imgUrl = rawImgUrl.toUri().getQueryParameter("url") ?: rawImgUrl
+            val imgUrl = (rawImgUrl ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawImgUrl
             val poster = if (imgUrl.startsWith("http")) imgUrl 
                          else if (imgUrl.isNotEmpty()) "${baseUrl.trimEnd('/')}/${imgUrl.trimStart('/')}" 
                          else null
@@ -239,7 +238,7 @@ object PoseidonHD2Provider : Provider {
                 ?: return@mapNotNull null
             
             val rawImgUrl = element.selectFirst("img")?.attr("src") ?: ""
-            val imgUrl = rawImgUrl.toUri().getQueryParameter("url") ?: rawImgUrl
+            val imgUrl = (rawImgUrl ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawImgUrl
             val poster = if (imgUrl.startsWith("http")) imgUrl 
                          else if (imgUrl.isNotEmpty()) "${baseUrl.trimEnd('/')}/${imgUrl.trimStart('/')}" 
                          else null
@@ -266,7 +265,7 @@ object PoseidonHD2Provider : Provider {
                 ?: return@mapNotNull null
             
             val rawImgUrl = element.selectFirst("img")?.attr("src") ?: ""
-            val imgUrl = rawImgUrl.toUri().getQueryParameter("url") ?: rawImgUrl
+            val imgUrl = (rawImgUrl ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawImgUrl
             val poster = if (imgUrl.startsWith("http")) imgUrl 
                          else if (imgUrl.isNotEmpty()) "${baseUrl.trimEnd('/')}/${imgUrl.trimStart('/')}" 
                          else null
@@ -328,7 +327,7 @@ object PoseidonHD2Provider : Provider {
             val title = titles?.optString("name") ?: json.optString("title") ?: ""
             val images = json.optJSONObject("images")
             val rawPoster = images?.optString("poster") ?: ""
-            val imgUrl = rawPoster.toUri().getQueryParameter("url") ?: rawPoster
+            val imgUrl = (rawPoster ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawPoster
             val poster = if (imgUrl.startsWith("http")) imgUrl 
                          else if (imgUrl.isNotEmpty()) "${baseUrl.trimEnd('/')}/${imgUrl.trimStart('/')}" 
                          else null
@@ -397,7 +396,7 @@ object PoseidonHD2Provider : Provider {
         val title = titles?.optString("name") ?: json.optString("title") ?: ""
         val images = json.optJSONObject("images")
         val rawPoster = images?.optString("poster") ?: ""
-        val imgUrl = rawPoster.toUri().getQueryParameter("url") ?: rawPoster
+        val imgUrl = (rawPoster ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawPoster
         val poster = if (imgUrl.startsWith("http")) imgUrl 
                      else if (imgUrl.isNotEmpty()) "${baseUrl.trimEnd('/')}/${imgUrl.trimStart('/')}"
                      else null
@@ -434,7 +433,7 @@ object PoseidonHD2Provider : Provider {
                 val slug = ep.optJSONObject("url")?.optString("slug") ?: ""
                 
                 val rawPoster = ep.optString("image")
-                val imgUrl = rawPoster.toUri().getQueryParameter("url") ?: rawPoster
+                val imgUrl = (rawPoster ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawPoster
                 val poster = if (imgUrl.startsWith("http")) imgUrl 
                              else if (imgUrl.isNotEmpty()) "$baseUrl${imgUrl.trimStart('/')}" 
                              else null
@@ -465,7 +464,7 @@ object PoseidonHD2Provider : Provider {
                 ?: return@mapNotNull null
             
             val rawImgUrl = element.selectFirst("img")?.attr("src") ?: ""
-            val imgUrl = rawImgUrl.toUri().getQueryParameter("url") ?: rawImgUrl
+            val imgUrl = (rawImgUrl ?: "")?.toHttpUrlOrNull()?.queryParameter("url") ?: rawImgUrl
             val poster = if (imgUrl.startsWith("http")) imgUrl 
                          else if (imgUrl.isNotEmpty()) "${baseUrl.trimEnd('/')}/${imgUrl.trimStart('/')}" 
                          else null
@@ -544,7 +543,7 @@ object PoseidonHD2Provider : Provider {
     }
 
     private suspend fun resolvePlayerUrl(playerUrl: String): String? {
-        val currentHost = UserPreferences.poseidonDomain.removePrefix("www.")
+        val currentHost = DEFAULT_DOMAIN.removePrefix("www.")
         if (!playerUrl.contains("player.$currentHost")) return playerUrl
         
         // Try resolving with OkHttp first (fast)
@@ -592,7 +591,7 @@ object PoseidonHD2Provider : Provider {
         var finalUrl = server.src
 
         if (finalUrl.contains("voe.sx") || server.name.contains("VOE", ignoreCase = true)) {
-            val path = finalUrl.toUri().path?.trimStart('/') ?: ""
+            val path = finalUrl.let { java.net.URI.create(it.toString()) }.path?.trimStart('/') ?: ""
             if (!path.startsWith("e/")) {
                 finalUrl = "https://voe.sx/e/$path"
             }

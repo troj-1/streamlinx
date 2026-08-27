@@ -31,7 +31,6 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
 import retrofit2.http.Query
-import android.os.Looper
 import com.google.gson.reflect.TypeToken
 import java.lang.reflect.Type
 import kotlinx.coroutines.sync.Mutex
@@ -44,7 +43,7 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
     private val totalCounts = mutableMapOf<String, Int>()
 
     override val language: String
-        get() = _language ?: UserPreferences.providerLanguage ?: "it"
+        get() = _language ?: "it" ?: "it"
 
     private val LANG: String
         get() = if (language == "en") "en" else "it"
@@ -61,10 +60,10 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
             if (!_domain.isNullOrEmpty())
                 return _domain!!
 
-            val storedDomain = UserPreferences.streamingcommunityDomain
+            val storedDomain: String? = null
 
             if (storedDomain.isNullOrEmpty() || BLOCKED_DOMAINS.any { storedDomain.contains(it) }) {
-                if (!storedDomain.isNullOrEmpty()) UserPreferences.streamingcommunityDomain = DEFAULT_DOMAIN
+                if (!storedDomain.isNullOrEmpty()) // null = DEFAULT_DOMAIN
                 _domain = DEFAULT_DOMAIN
             } else {
                 _domain = storedDomain
@@ -73,12 +72,12 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
             return _domain!!
         }
         set(value) {
-            val currentDomain = _domain ?: UserPreferences.streamingcommunityDomain.ifEmpty { DEFAULT_DOMAIN }
+            val currentDomain = _domain ?: DEFAULT_DOMAIN
             if (value != currentDomain) {
                 Log.d(TAG, "Domain changed via setter from $currentDomain to $value")
-                UserPreferences.clearProviderCache(name)
+                // clear cache
                 _domain = value
-                UserPreferences.streamingcommunityDomain = value
+                // null = value
                 invalidateService()
             }
         }
@@ -115,7 +114,7 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
                 _domain = host
                 _service = StreamingCommunityService.build(finalBase, currentLang, { domain }, { nd ->
                     _domain = nd
-                    UserPreferences.streamingcommunityDomain = nd
+                    // null = nd
                 }, LANG)
             }
             _service!!
@@ -124,7 +123,7 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
 
     suspend fun rebuildService(newDomain: String = domain) {
         mutex.withLock {
-            val prefsDomain = UserPreferences.streamingcommunityDomain
+            val prefsDomain: String? = null
             val desiredDomain = if (!prefsDomain.isNullOrEmpty() && prefsDomain != domain && prefsDomain != newDomain) prefsDomain else newDomain
             
             Log.d(TAG, "Forcing service rebuild for: https://$desiredDomain/")
@@ -132,18 +131,18 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
             val host = finalBase.substringAfter("https://").substringBefore("/")
             
             _domain = host
-            UserPreferences.streamingcommunityDomain = host
+            // null = host
             _serviceLanguage = language
             _serviceDomain = host
             _service = StreamingCommunityService.build(finalBase, language, { domain }, { nd ->
                 _domain = nd
-                UserPreferences.streamingcommunityDomain = nd
+                // null = nd
             }, LANG)
         }
     }
 
     private fun resolveFinalBaseUrl(startBaseUrl: String): String {
-        if (Looper.myLooper() == Looper.getMainLooper()) return startBaseUrl
+        // if (Looper.myLooper() == Looper.getMainLooper()) return startBaseUrl
 
         return try {
             val client = NetworkClient.default.newBuilder()
@@ -264,7 +263,7 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
             }
         }
 
-        // 3. Aggiungiamo i fallback da props (se non già aggiunti dagli slider)
+        // 3. Aggiungiamo i fallback da props (se non giÃƒÂ  aggiunti dagli slider)
         val propsMapping = listOf(
             "I titoli del momento" to (res.props?.trendingTitles ?: res.props?.trending),
             "Film aggiunti di recente" to res.props?.latestMovies,

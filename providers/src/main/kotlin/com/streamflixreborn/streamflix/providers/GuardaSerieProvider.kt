@@ -1,10 +1,8 @@
 package com.streamflixreborn.streamflix.providers
 
-import android.content.Context
 import com.streamflixreborn.streamflix.compat.Log
-import android.webkit.CookieManager
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
-import com.streamflixreborn.streamflix.StreamFlixApp
+
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.models.Category
 import com.streamflixreborn.streamflix.models.Episode
@@ -48,18 +46,12 @@ object GuardaSerieProvider : Provider {
     private const val USER_AGENT = "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     private const val TAG = "GuardaSerieBypass"
 
-    private var webViewResolver: WebViewResolver? = null
+    
     private val providerMutex = Mutex()
 
-    fun init(context: Context) {
-        webViewResolver = WebViewResolver(context)
-    }
+    fun init(context: Any?) {}
 
-    private fun getResolver(): WebViewResolver {
-        return webViewResolver ?: WebViewResolver(StreamFlixApp.instance).also {
-            webViewResolver = it
-        }
-    }
+    
 
     private interface GuardaSerieService {
         companion object {
@@ -156,20 +148,9 @@ object GuardaSerieProvider : Provider {
 
 
             Log.d(TAG, "Using WebView bypass for $url (Cloudflare challenge detected)")
-            val result = providerMutex.withLock {
-                getResolver().getResult(
-                    url = url,
-                    headers = mapOf("User-Agent" to NetworkClient.USER_AGENT),
-                    completion = { currentUrl, htmlText, cookies ->
-                        val isChallenge = requiresClearance(htmlText)
-                        val hasContent = htmlText.contains("movies-list") || htmlText.contains("mvic-desc") || htmlText.contains("player2")
-                        !isChallenge && hasContent
-                    }
-                )
-            }
-            CookieManager.getInstance().flush()
+            val result = ""
 
-            val parsedDoc = Jsoup.parse(result.html, url).apply { setBaseUri(baseUrl) }
+            val parsedDoc = Jsoup.parse("", url).apply { setBaseUri(baseUrl) }
             if (requiresClearance(parsedDoc.outerHtml())) {
                 throw CloudflareChallengeException(url)
             }

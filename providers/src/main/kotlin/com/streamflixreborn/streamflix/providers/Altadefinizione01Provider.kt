@@ -333,7 +333,7 @@ object Altadefinizione01Provider : Provider {
                 }
                 if (imdbId != null) {
                     try {
-                        val uri = Uri.parse(id)
+                        val uri = java.net.URI(id)
                         val referer = "${uri.scheme}://${uri.host}/"
                         val vidxgoDoc = service.getPage("https://v.vidxgo.co/$imdbId", referer, "iframe")
                         val seasonTabs = vidxgoDoc.select(".ep-season-tab")
@@ -451,7 +451,7 @@ object Altadefinizione01Provider : Provider {
                 }
                 if (imdbId != null) {
                     try {
-                        val uri = Uri.parse(showUrl)
+                        val uri = java.net.URI(showUrl)
                         val referer = "${uri.scheme}://${uri.host}/"
                         val responseBody = service.getVidxGoSeasons(imdbId, seasonNumber, referer)
                         val json = org.json.JSONObject(responseBody.string())

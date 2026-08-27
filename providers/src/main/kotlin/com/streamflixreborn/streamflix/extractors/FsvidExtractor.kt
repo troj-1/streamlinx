@@ -25,7 +25,7 @@ class FsvidExtractor : Extractor() {
                 .newBuilder()
                 .header("User-Agent", DEFAULT_USER_AGENT)
                 .apply {
-                    UserPreferences.currentProvider?.baseUrl?.let { header("Referer", it) }
+                    // Desktop: Referer header from current provider not available
                 }
                 .build()
             chain.proceed(newRequest)

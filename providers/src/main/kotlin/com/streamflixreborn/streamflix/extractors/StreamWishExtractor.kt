@@ -1,13 +1,7 @@
 package com.streamflixreborn.streamflix.extractors
 
-import android.annotation.SuppressLint
-import android.content.Context
 import java.net.URI
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
-import com.streamflixreborn.streamflix.StreamFlixApp
 import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.utils.JsUnpacker
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -113,17 +107,16 @@ open class StreamWishExtractor : Extractor() {
     )
 
     protected var referer = ""
-    val context = StreamFlixApp.instance.applicationContext
 
     override suspend fun extract(link: String): Video {
         if (referer.isEmpty()) {
-            val uri = Uri.parse(link)
+            val uri = java.net.URI(link)
             if (uri.scheme != null && uri.host != null) {
                 referer = "${uri.scheme}://${uri.host}/"
             }
         }
         val service = Service.build(mainUrl)
-        val redirectedUrl = resolveRedirectWithWebView(context, link, mainUrl)
+        val redirectedUrl = resolveRedirectWithOkHttp(link, mainUrl)
         val document = service.get(redirectedUrl, referer = referer)
 
 
@@ -144,7 +137,7 @@ open class StreamWishExtractor : Extractor() {
             ?: throw Exception("Can't retrieve m3u8")
 
         val finalSource = if (source.startsWith("/")) {
-            val uri = Uri.parse(redirectedUrl)
+            val uri = java.net.URI(redirectedUrl)
             "${uri.scheme}://${uri.host}$source"
         } else {
             source
@@ -170,7 +163,7 @@ open class StreamWishExtractor : Extractor() {
             subtitles = subtitles,
             headers = mapOf(
                 "Referer" to referer,
-                "Origin" to "https://${Uri.parse(redirectedUrl).host}",
+                "Origin" to "https://${java.net.URI(redirectedUrl).host}",
                 "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
                 "Accept" to "*/*",
                 "Accept-Language" to "en-US,en;q=0.5",
@@ -181,47 +174,20 @@ open class StreamWishExtractor : Extractor() {
         return video
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
-    suspend fun resolveRedirectWithWebView(context: Context, url: String, mainUrl: String): String =
-        withContext(Dispatchers.Main) {
-            val result = withTimeoutOrNull(30000) {
-                suspendCancellableCoroutine { cont ->
-                    val webView = WebView(context)
-                    webView.settings.javaScriptEnabled = true
-                    webView.settings.domStorageEnabled = true
-
-                    webView.webViewClient = object : WebViewClient() {
-                        override fun shouldOverrideUrlLoading(
-                            view: WebView?,
-                            request: WebResourceRequest?
-                        ): Boolean {
-                            val newUrl = request?.url.toString()
-                            if (newUrl.contains(mainUrl) || newUrl.contains("/e/")) {
-                                if (cont.isActive) cont.resume(newUrl)
-                                webView.destroy()
-                                return true
-                            }
-                            return false
-                        }
-
-                        override fun onPageFinished(view: WebView?, url: String?) {
-                            if (url != null && (url.contains(mainUrl) || url.contains("/e/") || !url.contains("about:blank"))) {
-                                if (cont.isActive) cont.resume(url)
-                                webView.destroy()
-                            }
-                        }
-                    }
-
-                    webView.loadUrl(url)
-
-                    cont.invokeOnCancellation {
-                        webView.stopLoading()
-                        webView.destroy()
-                    }
-                }
-            }
-            result ?: url // Fallback to original URL if timeout
+    /** Desktop replacement: follow redirects via OkHttp instead of Android WebView */
+    private suspend fun resolveRedirectWithOkHttp(url: String, mainUrl: String): String {
+        return try {
+            val client = com.streamflixreborn.streamflix.utils.NetworkClient.default
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .header("User-Agent", com.streamflixreborn.streamflix.utils.NetworkClient.USER_AGENT)
+                .build()
+            val response = client.newCall(request).execute()
+            response.request.url.toString()
+        } catch (e: Exception) {
+            url // fallback to original
         }
+    }
 
 
     class UqloadsXyz : StreamWishExtractor() {

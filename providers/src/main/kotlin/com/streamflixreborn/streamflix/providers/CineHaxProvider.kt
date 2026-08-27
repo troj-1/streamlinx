@@ -1,8 +1,8 @@
 package com.streamflixreborn.streamflix.providers
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 import java.net.URI
 import com.streamflixreborn.streamflix.compat.Log
-import androidx.media3.common.MimeTypes
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.models.*
@@ -43,33 +43,33 @@ object CineHaxProvider : Provider {
 
     private val HOME_CATEGORY_LABELS = mapOf(
         "trending_all" to "Tendencias",
-        "trending_movies" to "Películas en tendencia",
+        "trending_movies" to "PelÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­culas en tendencia",
         "trending_series" to "Series en tendencia",
-        "popular_movies" to "Películas populares",
+        "popular_movies" to "PelÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­culas populares",
         "popular_tv" to "Series populares",
-        "top_rated_movies" to "Películas mejor valoradas",
+        "top_rated_movies" to "PelÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­culas mejor valoradas",
         "top_rated_tv" to "Series mejor valoradas",
         "now_playing_movies" to "En cartelera",
-        "upcoming_movies" to "Próximamente",
+        "upcoming_movies" to "PrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ximamente",
     )
 
     private val GENRES = listOf(
-        "movie:action" to "Acción",
+        "movie:action" to "AcciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
         "movie:adventure" to "Aventura",
         "movie:comedy" to "Comedia",
-        "movie:fantasy" to "Fantasía",
+        "movie:fantasy" to "FantasÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a",
         "movie:history" to "Historia",
         "movie:horror" to "Terror",
-        "movie:music" to "Música",
+        "movie:music" to "MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºsica",
         "movie:mystery" to "Misterio",
         "movie:romance" to "Romance",
-        "movie:war" to "Bélica",
+        "movie:war" to "BÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lica",
         "movie:western" to "Western",
-        "tv:action-adventure" to "Acción y aventura",
+        "tv:action-adventure" to "AcciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n y aventura",
         "tv:kids" to "Infantil",
-        "tv:sci-fi-fantasy" to "Ciencia ficción y fantasía",
+        "tv:sci-fi-fantasy" to "Ciencia ficciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n y fantasÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a",
         "tv:soap" to "Telenovela",
-        "tv:war-politics" to "Guerra y política",
+        "tv:war-politics" to "Guerra y polÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­tica",
     )
 
     // region HTTP
@@ -196,7 +196,7 @@ object CineHaxProvider : Provider {
     // rating/genres, but that block disappeared from /watch/ pages (verified against multiple
     // ids with cache-busting - not a stale-cache fluke). The same data is still on the page in
     // other forms though: the title/backdrop are query params on the "data-url" embed link (the
-    // same one getServers() already reads), the overview sits right after an <h3>Descripción</h3>,
+    // same one getServers() already reads), the overview sits right after an <h3>DescripciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n</h3>,
     // and rating/genres/release-year are plain DOM text. [parseWatchPageFromDom] reads those
     // directly. [parseWatchPage] still tries the JSON-LD first in case they bring it back.
 
@@ -242,9 +242,9 @@ object CineHaxProvider : Provider {
         val embedDataUrl = Regex("""data-url="(https://$UNLIMPLAY_HOST[^"]*)"""")
             .find(html)?.groupValues?.get(1)?.replace("&#038;", "&")
             ?: throw Exception("No se pudo leer la metadata de CineHax")
-        val embedUri = Uri.parse(embedDataUrl)
+        val embedUri = embedDataUrl.toHttpUrlOrNull()
 
-        val overview = Regex("""Descripción</h3>\s*<p[^>]*>([^<]*)</p>""")
+        val overview = Regex("""DescripciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n</h3>\s*<p[^>]*>([^<]*)</p>""")
             .find(html)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() }
 
         val rating = Regex("""font-bold text-white flex items-center gap-0\.5">([\d.]+)</div>""")
@@ -260,10 +260,10 @@ object CineHaxProvider : Provider {
             .toList()
 
         return WatchPageMeta(
-            title = embedUri.getQueryParameter("title").orEmpty(),
+            title = embedUri?.queryParameter("title").orEmpty(),
             overview = overview,
             poster = extractPoster(html),
-            backdrop = embedUri.getQueryParameter("backdrop"),
+            backdrop = embedUri?.queryParameter("backdrop"),
             rating = rating,
             released = released,
             genres = genres,
@@ -402,7 +402,7 @@ object CineHaxProvider : Provider {
                 val langLabel = LANGUAGE_LABELS[lang] ?: lang.replaceFirstChar { it.uppercase() }
                 Video.Server(
                     id = url,
-                    name = "${serverLabel.replaceFirstChar { it.uppercase() }} · $langLabel",
+                    name = "${serverLabel.replaceFirstChar { it.uppercase() }} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· $langLabel",
                     src = url,
                 )
             }
@@ -411,7 +411,7 @@ object CineHaxProvider : Provider {
 
     override suspend fun getVideo(server: Video.Server): Video {
         if (server.src.contains(REMUX_HOST)) {
-            return Video(source = server.src, type = MimeTypes.VIDEO_MP4)
+            return Video(source = server.src, type = "video/mp4")
         }
         return Extractor.extract(server.src, server)
     }

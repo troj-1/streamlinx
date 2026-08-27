@@ -1,6 +1,6 @@
 package com.streamflixreborn.streamflix.providers
 
-import MyCookieJar
+import com.streamflixreborn.streamflix.utils.NetworkClient
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
@@ -704,7 +704,7 @@ object AnimeWorldProvider : Provider {
         companion object {
             fun build(): AnimeWorldService {
                 val client = OkHttpClient.Builder()
-                    .cookieJar(MyCookieJar())
+                    .cookieJar(NetworkClient.cookieJar)
                     .readTimeout(30, TimeUnit.SECONDS)
                     .connectTimeout(30, TimeUnit.SECONDS)
                     .dns(DnsResolver.doh)
@@ -733,7 +733,7 @@ object AnimeWorldProvider : Provider {
                 val trustManager = trustAllCerts[0] as X509TrustManager
 
                 val client = OkHttpClient.Builder()
-                    .cookieJar(MyCookieJar())
+                    .cookieJar(NetworkClient.cookieJar)
                     .readTimeout(30, TimeUnit.SECONDS)
                     .connectTimeout(30, TimeUnit.SECONDS)
                     .sslSocketFactory(sslContext.socketFactory, trustManager)

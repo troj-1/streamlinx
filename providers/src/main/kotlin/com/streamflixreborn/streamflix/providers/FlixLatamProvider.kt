@@ -62,13 +62,13 @@ object FlixLatamProvider : Provider {
     override suspend fun search(query: String, page: Int): List<Item> {
         if (query.isBlank()) {
             return listOf(
-                Genre(id = "generos/accion", name = "Acción"), Genre(id = "generos/animacion", name = "Animación"),
-                Genre(id = "generos/aventura", name = "Aventura"), Genre(id = "generos/ciencia-ficcion", name = "Ciencia Ficción"),
+                Genre(id = "generos/accion", name = "AcciÃ³n"), Genre(id = "generos/animacion", name = "AnimaciÃ³n"),
+                Genre(id = "generos/aventura", name = "Aventura"), Genre(id = "generos/ciencia-ficcion", name = "Ciencia FicciÃ³n"),
                 Genre(id = "generos/comedia", name = "Comedia"), Genre(id = "generos/crimen", name = "Crimen"),
                 Genre(id = "generos/documental", name = "Documental"), Genre(id = "generos/drama", name = "Drama"),
-                Genre(id = "generos/familia", name = "Familia"), Genre(id = "generos/fantasia", name = "Fantasía"),
+                Genre(id = "generos/familia", name = "Familia"), Genre(id = "generos/fantasia", name = "FantasÃ­a"),
                 Genre(id = "generos/historia", name = "Historia"), Genre(id = "generos/kids", name = "Kids"),
-                Genre(id = "generos/misterio", name = "Misterio"), Genre(id = "generos/musica", name = "Música"),
+                Genre(id = "generos/misterio", name = "Misterio"), Genre(id = "generos/musica", name = "MÃºsica"),
                 Genre(id = "generos/romance", name = "Romance"), Genre(id = "generos/terror", name = "Terror"),
                 Genre(id = "generos/western", name = "Western")
             )
@@ -330,7 +330,7 @@ object FlixLatamProvider : Provider {
                         resolvedUrl = "$baseUrl/$finalUrl"
                     }
                     
-                    val serverName = dom.selectFirst("span")?.text()?.trim() ?: "Opción"
+                    val serverName = dom.selectFirst("span")?.text()?.trim() ?: "OpciÃ³n"
                     if (serverName.contains("download", ignoreCase = true) || serverName.contains("1fichier", ignoreCase = true)) return@mapNotNull null
                     if (servers.any { it.id == resolvedUrl }) return@mapNotNull null
                     Video.Server(id = resolvedUrl, name = serverName)
@@ -364,7 +364,7 @@ object FlixLatamProvider : Provider {
     override suspend fun getVideo(server: Video.Server): Video = Extractor.extract(server.id)
 
     override suspend fun getPeople(id: String, page: Int): People {
-        throw Exception("Esta función no está disponible en FlixLatam")
+        throw Exception("Esta funciÃ³n no estÃ¡ disponible en FlixLatam")
     }
 
     private fun String.getId(): String = this.substringAfter(baseUrl).trim('/')
@@ -461,7 +461,7 @@ object FlixLatamProvider : Provider {
             }
             
             // Decode base64 payload
-            val payloadJson = String(android.util.Base64.decode(payloadB64, android.util.Base64.DEFAULT))
+            val payloadJson = String(java.util.Base64.getDecoder().decode(payloadB64))
             
             // Manual parsing for robustness
             val linkStart = payloadJson.indexOf("\"link\":\"")

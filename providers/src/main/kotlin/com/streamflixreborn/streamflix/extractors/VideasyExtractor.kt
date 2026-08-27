@@ -1,7 +1,6 @@
 package com.streamflixreborn.streamflix.extractors
 
 import com.streamflixreborn.streamflix.models.Video
-import androidx.media3.common.MimeTypes
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -146,7 +145,7 @@ class VideasyExtractor : Extractor() {
             
             // Reyna and Cypher use MP4 instead of HLS
             val isMp4Server = config?.name == "Reyna" || config?.name == "Cypher"
-            val mimeType = if (isMp4Server) MimeTypes.VIDEO_MP4 else MimeTypes.APPLICATION_M3U8
+            val mimeType = if (isMp4Server) "video/mp4" else "application/x-mpegURL"
 
             return Video(
                 source = source.optString("url"),

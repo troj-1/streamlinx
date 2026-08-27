@@ -575,7 +575,7 @@ object MkissaProvider : Provider {
                 when (item) {
                     is Movie -> item.id
                     is TvShow -> item.id
-                    else -> item.itemType
+                    else -> item.hashCode()
                 }
             }
             .take(limit)
@@ -678,7 +678,7 @@ object MkissaProvider : Provider {
             when (item) {
                 is Movie -> Log.d(TAG, "  Movie: ${item.title} (genres: ${item.genres.map { it.name }})")
                 is TvShow -> Log.d(TAG, "  TvShow: ${item.title} (genres: ${item.genres.map { it.name }})")
-                else -> Log.d(TAG, "  Other: ${item.itemType}")
+                else -> Log.d(TAG, "  Other: ${item.hashCode()}")
             }
         }
         return items

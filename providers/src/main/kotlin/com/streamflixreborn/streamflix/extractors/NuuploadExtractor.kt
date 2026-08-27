@@ -1,7 +1,6 @@
 package com.streamflixreborn.streamflix.extractors
 
 import java.util.Base64
-import androidx.media3.common.MimeTypes
 import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.utils.DnsResolver
 import com.streamflixreborn.streamflix.utils.JsUnpacker
@@ -57,9 +56,9 @@ class NuuploadExtractor : Extractor() {
         val sourceUrl = resolvePlayableUrl(rawSourceUrl, page.finalUrl)
 
         val videoType = when {
-            sourceUrl.contains(".m3u8", ignoreCase = true) -> MimeTypes.APPLICATION_M3U8
-            isLikelyHlsSessionUrl(sourceUrl, page.finalUrl, htmlCandidates) -> MimeTypes.APPLICATION_M3U8
-            sourceUrl.contains(".mp4", ignoreCase = true) -> MimeTypes.VIDEO_MP4
+            sourceUrl.contains(".m3u8", ignoreCase = true) -> "application/x-mpegURL"
+            isLikelyHlsSessionUrl(sourceUrl, page.finalUrl, htmlCandidates) -> "application/x-mpegURL"
+            sourceUrl.contains(".mp4", ignoreCase = true) -> "video/mp4"
             else -> null
         }
 

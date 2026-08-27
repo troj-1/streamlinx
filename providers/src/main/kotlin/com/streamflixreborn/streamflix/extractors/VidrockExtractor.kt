@@ -1,7 +1,6 @@
 package com.streamflixreborn.streamflix.extractors
 
 import java.util.Base64
-import androidx.media3.common.MimeTypes
 import com.streamflixreborn.streamflix.models.Video
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -69,7 +68,7 @@ class VidrockExtractor : Extractor() {
 
         val actualServerName = serverEntry.key
         var videoUrl = serverEntry.value["url"]!!
-        var type = MimeTypes.APPLICATION_M3U8
+        var type = "application/x-mpegURL"
 
         if (actualServerName.equals("Atlas", ignoreCase = true)) {
             val qualities = try {
@@ -80,7 +79,7 @@ class VidrockExtractor : Extractor() {
             val highest = qualities.maxByOrNull { it.resolution }
             if (highest != null) {
                 videoUrl = highest.url
-                type = MimeTypes.VIDEO_MP4
+                type = "video/mp4"
             }
         }
 
@@ -105,7 +104,7 @@ class VidrockExtractor : Extractor() {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec)
         val encrypted = cipher.doFinal(data.toByteArray(Charsets.UTF_8))
 
-        return Base64.encodeToString(encrypted, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+        return java.util.Base64.getEncoder().encodeToString(encrypted)
     }
 
     private interface Service {

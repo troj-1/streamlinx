@@ -1,7 +1,6 @@
 package com.streamflixreborn.streamflix.extractors
 
 import java.util.Base64
-import androidx.media3.common.MimeTypes
 import com.streamflixreborn.streamflix.models.Video
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -106,7 +105,7 @@ class VidzeeExtractor : Extractor() {
             }
 
             val isDukeServer = link.contains("sr=1")
-            val mimeType = if (isDukeServer) MimeTypes.VIDEO_MP4 else MimeTypes.APPLICATION_M3U8
+            val mimeType = if (isDukeServer) "video/mp4" else "application/x-mpegURL"
 
             return@coroutineScope Video(
                 source = decryptedUrl,

@@ -2,7 +2,6 @@ package com.streamflixreborn.streamflix.extractors
 
 import java.net.URI
 import java.util.Base64
-import androidx.media3.common.MimeTypes
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.providers.RidomoviesProvider
@@ -155,10 +154,10 @@ class CloseloadExtractor : Extractor() {
 
         if (source == null) throw Exception("No video found")
 
-        val url = Uri.parse(link)
+        val url = java.net.URI(link)
         val referer = "${url.scheme}://${url.host}/"
 
-        return Video(source, headers = mapOf("Referer" to referer), type = MimeTypes.APPLICATION_M3U8)
+        return Video(source, headers = mapOf("Referer" to referer), type = "application/x-mpegURL")
     }
     
     private interface Service {

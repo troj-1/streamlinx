@@ -33,10 +33,9 @@ import retrofit2.http.Path
 
 object FrenchAnimeProvider : Provider, ProviderConfigUrl {
     override val defaultBaseUrl: String = "https://french-anime.com/"
-    override val baseUrl: String = FrenchAnimeProvider.defaultBaseUrl
+    override val baseUrl: String
         get() {
-            val cacheURL = UserPreferences.getProviderCache(this, UserPreferences.PROVIDER_URL)
-            return cacheURL.ifEmpty { field }
+            return defaultBaseUrl
         }
     override val name = "FrenchAnime"
     override val logo: String
@@ -230,7 +229,7 @@ object FrenchAnimeProvider : Provider, ProviderConfigUrl {
                 .find { it.selectFirst("div.mov-label")?.text() == "Date de sortie:" }
                 ?.selectFirst("div.mov-desc")?.text()?.substringBefore(" to"),
             runtime = document.select("ul.mov-list li")
-                .find { it.selectFirst("div.mov-label")?.text() == "Durée:" }
+                .find { it.selectFirst("div.mov-label")?.text() == "DurÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e:" }
                 ?.selectFirst("div.mov-desc")?.text()?.extractRuntime(),
             poster = document.selectFirst("div.mov-img img[itemprop='thumbnailUrl']")
                 ?.attr("src")?.toUrl(),
@@ -243,7 +242,7 @@ object FrenchAnimeProvider : Provider, ProviderConfigUrl {
                     )
                 } ?: listOf(),
             directors = document.select("ul.mov-list li")
-                .find { it.selectFirst("div.mov-label")?.text() == "RÉALISATEUR:" }
+                .find { it.selectFirst("div.mov-label")?.text() == "RÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ALISATEUR:" }
                 ?.selectFirst("div.mov-desc span[itemprop='name']")?.text()
                 .toPeople(),
             cast = document.select("ul.mov-list li")
@@ -269,7 +268,7 @@ object FrenchAnimeProvider : Provider, ProviderConfigUrl {
                 .find { it.selectFirst("div.mov-label")?.text() == "Date de sortie:" }
                 ?.selectFirst("div.mov-desc")?.text()?.substringBefore(" to"),
             runtime = document.select("ul.mov-list li")
-                .find { it.selectFirst("div.mov-label")?.text() == "Durée:" }
+                .find { it.selectFirst("div.mov-label")?.text() == "DurÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©e:" }
                 ?.selectFirst("div.mov-desc")?.text()?.extractRuntime(),
             poster = document.selectFirst("div.mov-img img[itemprop=thumbnailUrl]")?.attr("src")
                 ?.toUrl(),
@@ -289,7 +288,7 @@ object FrenchAnimeProvider : Provider, ProviderConfigUrl {
                     )
                 } ?: listOf(),
             directors = document.select("ul.mov-list li")
-                .find { it.selectFirst("div.mov-label")?.text() == "RÉALISATEUR:" }
+                .find { it.selectFirst("div.mov-label")?.text() == "RÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ALISATEUR:" }
                 ?.selectFirst("div.mov-desc span[itemprop='name']")?.text()
                 .toPeople(),
             cast = document.select("ul.mov-list li")
@@ -332,7 +331,7 @@ object FrenchAnimeProvider : Provider, ProviderConfigUrl {
             }
         }
 
-        val genreName = document.title().substringBefore(" - French Anime").substringBefore(" »")
+        val genreName = document.title().substringBefore(" - French Anime").substringBefore(" ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»")
 
         val shows = document.select("div.mov").mapNotNull { mov ->
             val a = mov.selectFirst("a.mov-t") ?: return@mapNotNull null
@@ -486,9 +485,9 @@ object FrenchAnimeProvider : Provider, ProviderConfigUrl {
 
     private fun checkHasMore(berrorsDiv: Element) {
         val resultText = berrorsDiv.text()
-        val totalResults = resultText.substringAfter("Trouvé ")
-            .substringBefore(" réponses").toIntOrNull() ?: 0
-        val currentRange = resultText.substringAfter("Résultats de la requête ")
+        val totalResults = resultText.substringAfter("TrouvÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© ")
+            .substringBefore(" rÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©ponses").toIntOrNull() ?: 0
+        val currentRange = resultText.substringAfter("RÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©sultats de la requÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªte ")
             .substringBefore(")").split(" - ")
         val receivedItems = currentRange.getOrNull(1)?.toIntOrNull() ?: 0
 

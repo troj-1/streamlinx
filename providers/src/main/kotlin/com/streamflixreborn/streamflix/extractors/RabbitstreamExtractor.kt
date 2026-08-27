@@ -7,7 +7,6 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import com.streamflixreborn.streamflix.BuildConfig
 import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.utils.StringConverterFactory
 import retrofit2.Retrofit
@@ -39,7 +38,7 @@ open class RabbitstreamExtractor : Extractor() {
         val sourceId = link.substringAfterLast("/").substringBefore("?")
 
         val response = service.getSources(
-            url = BuildConfig.RABBITSTREAM_SOURCE_API + sourceId,
+            url = (System.getenv("RABBITSTREAM_SOURCE_API") ?: "") + sourceId,
         )
 
         val sources = when (response) {

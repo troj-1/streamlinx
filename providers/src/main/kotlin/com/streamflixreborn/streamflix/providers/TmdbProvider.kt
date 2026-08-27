@@ -1,20 +1,14 @@
 package com.streamflixreborn.streamflix.providers
 
 import com.streamflixreborn.streamflix.compat.Item
-import com.streamflixreborn.streamflix.extractors.AfterDarkExtractor
 import com.streamflixreborn.streamflix.extractors.Extractor
 import com.streamflixreborn.streamflix.extractors.MoflixExtractor
 import com.streamflixreborn.streamflix.extractors.MoviesapiExtractor
 import com.streamflixreborn.streamflix.extractors.TwoEmbedExtractor
-import com.streamflixreborn.streamflix.extractors.VidsrcNetExtractor
 import com.streamflixreborn.streamflix.extractors.VidsrcToExtractor
 import com.streamflixreborn.streamflix.extractors.VidzeeExtractor
-import com.streamflixreborn.streamflix.extractors.VixSrcExtractor
-import com.streamflixreborn.streamflix.extractors.VidLinkExtractor
-import com.streamflixreborn.streamflix.extractors.VidsrcRuExtractor
 import com.streamflixreborn.streamflix.extractors.EinschaltenExtractor
 import com.streamflixreborn.streamflix.extractors.FrembedExtractor
-import com.streamflixreborn.streamflix.extractors.VidflixExtractor
 import com.streamflixreborn.streamflix.extractors.VidrockExtractor
 import com.streamflixreborn.streamflix.extractors.VideasyExtractor
 import com.streamflixreborn.streamflix.extractors.PrimeSrcExtractor
@@ -724,8 +718,7 @@ class TmdbProvider(override val language: String) : Provider {
 
         when (lang) {
             "it" -> {
-                // Se la lingua è italiano, includiamo solo i server noti per l'italiano.
-                servers.add(VixSrcExtractor().server(videoType))
+                // Se la lingua Ã¨ italiano, includiamo solo i server noti per l'italiano.
             }
             "de" -> {
                 // Solo server tedeschi
@@ -737,8 +730,7 @@ class TmdbProvider(override val language: String) : Provider {
             }
             "fr" -> {
                 // Solo server francesi
-                servers.addAll(FrembedExtractor(UserPreferences.getProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL)).servers(videoType))
-                servers.addAll(AfterDarkExtractor(UserPreferences.getProviderCache(AfterDarkProvider, UserPreferences.PROVIDER_URL)).servers(videoType))
+                servers.addAll(FrembedExtractor(UserPreferences.getProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL) ?: FrembedProvider.baseUrl).servers(videoType))
             }
             "es" -> {
                 // TMDB Spagnolo: Utilizza ESCLUSIVAMENTE server certificati con audio spagnolo ([LAT] o [CAST])
@@ -759,7 +751,7 @@ class TmdbProvider(override val language: String) : Provider {
                     val nItem = itemTitle.lowercase().replace(Regex("[^a-z0-9]"), "")
                     val nTarget = target.lowercase().replace(Regex("[^a-z0-9]"), "")
                     
-                    // Match esatto (normalizzato) ha la priorità
+                    // Match esatto (normalizzato) ha la prioritÃ 
                     if (nItem == nTarget) return true
                     
                     // Match parziale se contenuto e differenza lunghezza minima
@@ -768,7 +760,7 @@ class TmdbProvider(override val language: String) : Provider {
                         if (diff <= 5) return true
                     }
                     
-                    // Match per parole (almeno una deve corrispondere esattamente se il target è corto, o tutte se lungo)
+                    // Match per parole (almeno una deve corrispondere esattamente se il target Ã¨ corto, o tutte se lungo)
                     val cleanWords: (String) -> Set<String> = { s ->
                         s.lowercase()
                             .replace(Regex("[^a-z0-9 ]"), " ")
@@ -825,12 +817,7 @@ class TmdbProvider(override val language: String) : Provider {
             else -> {
                 // Per inglese (en) o altre lingue non specifiche, usiamo i server globali
                 servers.addAll(listOf(
-                    VixSrcExtractor().server(videoType),
                     TwoEmbedExtractor().server(videoType),
-                    VidsrcNetExtractor().server(videoType),
-                    VidLinkExtractor().server(videoType),
-                    VidsrcRuExtractor().server(videoType),
-                    VidflixExtractor().server(videoType),
                 ))
 
                 if (videoType is Video.Type.Movie) {
@@ -847,12 +834,12 @@ class TmdbProvider(override val language: String) : Provider {
             }
         }
 
-        // ORDINE PRIORITÀ FINALE: Portiamo i server con audio Spagnolo e Filemoon in cima
+        // ORDINE PRIORITÃ€ FINALE: Portiamo i server con audio Spagnolo e Filemoon in cima
         val finalServers = if (language.startsWith("es")) {
             servers.sortedByDescending { server ->
                 val n = server.name.uppercase()
                 when {
-                    // Filemoon e tag audio spagnoli hanno la massima priorità
+                    // Filemoon e tag audio spagnoli hanno la massima prioritÃ 
                     n.contains("FILEMOON") -> 110
                     n.contains("[CAS]") || n.contains("[LAT]") || n.contains("[ES]") || n.contains("SPAIN") || n.contains("[CAST]") ||
                     n.contains("LATINO") || n.contains("SPANISH") || n.contains("CASTELLANO") || n.contains("(LAT)") || n.contains("(ESP)") -> 100
@@ -888,7 +875,7 @@ class TmdbProvider(override val language: String) : Provider {
             var forcedFound = false
             video.subtitles.forEach { sub ->
                 val label = sub.label.lowercase()
-                val isSpanish = label.contains("spanish") || label.contains("español") || 
+                val isSpanish = label.contains("spanish") || label.contains("espaÃ±ol") || 
                                 label.contains("espanol") || label.contains("castellano") || 
                                 label.contains(" lat ")
                 val isForced = label.contains("forced") || label.contains("forzati") || label.contains("forzato")
@@ -929,7 +916,7 @@ class TmdbProvider(override val language: String) : Provider {
             }
             "es" -> when (key) {
                 "Trending" -> "Tendencias"
-                "Popular Movies" -> "Películas populares"
+                "Popular Movies" -> "PelÃ­culas populares"
                 "Popular TV Shows" -> "Series de TV populares"
                 "Popular Anime" -> "Anime populares"
                 "Popular on Netflix" -> "Popular en Netflix"
@@ -956,7 +943,7 @@ class TmdbProvider(override val language: String) : Provider {
             "fr" -> when (key) {
                 "Trending" -> "Tendances"
                 "Popular Movies" -> "Films populaires"
-                "Popular TV Shows" -> "Séries populaires"
+                "Popular TV Shows" -> "SÃ©ries populaires"
                 "Popular Anime" -> "Animes populaires"
                 "Popular on Netflix" -> "Populaire sur Netflix"
                 "Popular on Amazon" -> "Populaire sur Amazon"

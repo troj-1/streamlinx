@@ -1,7 +1,6 @@
 package com.streamflixreborn.streamflix.extractors
 
 import java.net.URI
-import androidx.media3.common.MimeTypes
 import com.google.gson.Gson
 import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.utils.DnsResolver
@@ -28,7 +27,7 @@ class NekostreamExtractor : Extractor() {
         val streamPageUrl = link.substringBefore("?") + link.substringAfter("?", "?autostart=true").let {
             if (link.contains("?")) "?${link.substringAfter("?")}" else it
         }
-        val pageUri = Uri.parse(streamPageUrl)
+        val pageUri = java.net.URI(streamPageUrl)
         val origin = "${pageUri.scheme}://${pageUri.host}"
         val pageBody = getText(
             url = streamPageUrl,
@@ -91,7 +90,7 @@ class NekostreamExtractor : Extractor() {
                 "Sec-Fetch-Site" to "cross-site",
                 "Sec-GPC" to "1",
             ),
-            type = MimeTypes.APPLICATION_M3U8,
+            type = "application/x-mpegURL",
         )
     }
 

@@ -28,7 +28,7 @@ import retrofit2.http.Headers
 import retrofit2.http.Path
 import java.util.concurrent.TimeUnit
 
-import MyCookieJar
+import com.streamflixreborn.streamflix.utils.MyCookieJar
 import com.streamflixreborn.streamflix.utils.TmdbUtils
 
 object MEGAKinoProvider : Provider {
@@ -80,7 +80,7 @@ object MEGAKinoProvider : Provider {
         companion object {
             fun build(baseUrl: String): MEGAKinoService {
                 val client = OkHttpClient.Builder()
-                    .cookieJar(MyCookieJar())
+                    .cookieJar(com.streamflixreborn.streamflix.utils.MyCookieJar())
                     .readTimeout(30, TimeUnit.SECONDS)
                     .connectTimeout(30, TimeUnit.SECONDS)
                     .build()
