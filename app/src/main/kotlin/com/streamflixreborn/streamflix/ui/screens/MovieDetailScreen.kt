@@ -1,165 +1,155 @@
 package com.streamflixreborn.streamflix.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.streamflixreborn.streamflix.models.Movie
-import com.streamflixreborn.streamflix.models.Video
 import com.streamflixreborn.streamflix.providers.Provider
-import com.streamflixreborn.streamflix.extractors.Extractor
+import com.streamflixreborn.streamflix.ui.components.AsyncImage
+import com.streamflixreborn.streamflix.ui.components.ContentCard
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieDetailScreen(
-    provider: Provider,
     movieId: String,
-    onPlay: (String, Map<String, String>?) -> Unit,
-    onBack: () -> Unit
+    provider: Provider,
+    onBack: () -> Unit,
+    onPlayVideo: (videoUrl: String, headers: Map<String, String>?) -> Unit,
+    onMovieClick: (String) -> Unit,
+    onPersonClick: (String) -> Unit
 ) {
-    var movie by remember { mutableStateOf<Movie?>(null) }
-    var servers by remember { mutableStateOf<List<Video.Server>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var isLoadingServers by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+    var movie by remember(movieId) { mutableStateOf<Movie?>(null) }
+    var isLoading by remember(movieId) { mutableStateOf(true) }
 
     LaunchedEffect(movieId) {
         isLoading = true
         try {
             movie = withContext(Dispatchers.IO) { provider.getMovie(movieId) }
-        } catch (e: Exception) { error = e.message }
-        isLoading = false
+        } catch (e: Exception) {
+            // handle error
+        } finally {
+            isLoading = false
+        }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text(movie?.title ?: "Loading...") },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, "Back")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
-        )
-
-        when {
-            isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        },
+        containerColor = Color(0xFF141414)
+    ) { paddingValues ->
+        if (isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color(0xFFE50914))
             }
-            error != null -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                Text("Error: $error", color = MaterialTheme.colorScheme.error)
-            }
-            movie != null -> {
-                val m = movie!!
-                Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp)
+        } else {
+            movie?.let { m ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues)
                 ) {
-                    // Title
-                    Text(m.title, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(8.dp))
-
-                    // Meta info row
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        m.rating?.let { Text("\u2B50 ${String.format("%.1f", it)}", color = MaterialTheme.colorScheme.primary) }
-                        m.quality?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                        m.runtime?.let { Text("${it}min", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    item {
+                        AsyncImage(
+                            url = m.banner ?: m.poster,
+                            modifier = Modifier.fillMaxWidth().height(350.dp),
+                            contentDescription = "Banner"
+                        )
                     }
-                    Spacer(Modifier.height(16.dp))
-
-                    // Play button
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                isLoadingServers = true
-                                try {
-                                    val videoType = Video.Type.Movie(
-                                        id = m.id, title = m.title,
-                                        releaseDate = m.released?.let { cal -> java.text.SimpleDateFormat("yyyy-MM-dd").format(cal.time) } ?: "",
-                                        poster = m.poster ?: "", imdbId = m.imdbId
+                    item {
+                        Row(modifier = Modifier.padding(16.dp)) {
+                            AsyncImage(
+                                url = m.poster,
+                                modifier = Modifier.width(120.dp).height(180.dp),
+                                contentDescription = "Poster"
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(m.title, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(8.dp))
+                                Row {
+                                    m.rating?.let { Text("★ $it", color = Color.Yellow) }
+                                    Spacer(Modifier.width(8.dp))
+                                    m.quality?.let { Text(it, color = Color.White) }
+                                }
+                                m.genres?.let {
+                                    Text(it.joinToString(", "), color = Color.Gray, fontSize = 14.sp)
+                                }
+                                Spacer(Modifier.height(16.dp))
+                                Button(
+                                    onClick = { 
+                                        onPlayVideo("dummy_url", null) 
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE50914))
+                                ) {
+                                    Text("Watch Now")
+                                }
+                            }
+                        }
+                    }
+                    item {
+                        Text(
+                            text = m.overview ?: "",
+                            color = Color.LightGray,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    m.cast?.let { castList ->
+                        item {
+                            Text("Cast", color = Color.White, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp)) {
+                                items(castList) { person ->
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(end = 16.dp)) {
+                                        AsyncImage(
+                                            url = person.image,
+                                            modifier = Modifier.size(60.dp).clip(CircleShape),
+                                            contentDescription = person.name
+                                        )
+                                        Text(person.name, color = Color.White, fontSize = 12.sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (m.recommendations.isNotEmpty()) {
+                        item {
+                            Text("Recommendations", color = Color.White, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp)) {
+                                items(m.recommendations) { rec ->
+                                    val recMovie = rec as? Movie
+                                    ContentCard(
+                                        title = recMovie?.title ?: "",
+                                        posterUrl = recMovie?.poster,
+                                        quality = recMovie?.quality,
+                                        rating = recMovie?.rating,
+                                        year = recMovie?.released?.get(java.util.Calendar.YEAR)?.toString(),
+                                        onClick = { recMovie?.id?.let { onMovieClick(it) } }
                                     )
-                                    val srvs = withContext(Dispatchers.IO) { provider.getServers(m.id, videoType) }
-                                    servers = srvs
-                                    // Try first server
-                                    if (srvs.isNotEmpty()) {
-                                        val video = withContext(Dispatchers.IO) { provider.getVideo(srvs.first()) }
-                                        onPlay(video.source, video.headers)
-                                    }
-                                } catch (e: Exception) { error = "Playback error: ${e.message}" }
-                                isLoadingServers = false
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        enabled = !isLoadingServers
-                    ) {
-                        if (isLoadingServers) CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
-                        else {
-                            Icon(Icons.Default.PlayArrow, "Play")
-                            Spacer(Modifier.width(8.dp))
-                            Text("Play", fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    // Server list
-                    if (servers.isNotEmpty()) {
-                        Spacer(Modifier.height(16.dp))
-                        Text("Servers", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        servers.forEach { server ->
-                            OutlinedButton(
-                                onClick = {
-                                    scope.launch {
-                                        try {
-                                            val video = withContext(Dispatchers.IO) { provider.getVideo(server) }
-                                            onPlay(video.source, video.headers)
-                                        } catch (e: Exception) { error = "Server error: ${e.message}" }
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                            ) { Text(server.name) }
-                        }
-                    }
-
-                    // Overview
-                    Spacer(Modifier.height(24.dp))
-                    m.overview?.let {
-                        Text("Synopsis", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(8.dp))
-                        Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 22.sp)
-                    }
-
-                    // Genres
-                    if (m.genres.isNotEmpty()) {
-                        Spacer(Modifier.height(16.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(m.genres) { genre ->
-                                SuggestionChip(onClick = {}, label = { Text(genre.name) })
-                            }
-                        }
-                    }
-
-                    // Cast
-                    if (m.cast.isNotEmpty()) {
-                        Spacer(Modifier.height(16.dp))
-                        Text("Cast", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                            items(m.cast) { person ->
-                                AssistChip(onClick = {}, label = { Text(person.name) })
+                                    Spacer(Modifier.width(8.dp))
+                                }
                             }
                         }
                     }

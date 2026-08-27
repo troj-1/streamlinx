@@ -1,115 +1,131 @@
 package com.streamflixreborn.streamflix.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.streamflixreborn.streamflix.models.*
+import com.streamflixreborn.streamflix.models.Episode
+import com.streamflixreborn.streamflix.models.Season
+import com.streamflixreborn.streamflix.models.TvShow
 import com.streamflixreborn.streamflix.providers.Provider
+import com.streamflixreborn.streamflix.ui.components.AsyncImage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TvShowDetailScreen(
-    provider: Provider,
     tvShowId: String,
-    onPlay: (String, Map<String, String>?) -> Unit,
-    onBack: () -> Unit
+    provider: Provider,
+    onBack: () -> Unit,
+    onPlayVideo: (videoUrl: String, headers: Map<String, String>?) -> Unit,
+    onTvShowClick: (String) -> Unit,
+    onPersonClick: (String) -> Unit
 ) {
-    var tvShow by remember { mutableStateOf<TvShow?>(null) }
+    var show by remember(tvShowId) { mutableStateOf<TvShow?>(null) }
     var selectedSeason by remember { mutableStateOf<Season?>(null) }
     var episodes by remember { mutableStateOf<List<Episode>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+    var isLoading by remember(tvShowId) { mutableStateOf(true) }
 
     LaunchedEffect(tvShowId) {
         isLoading = true
         try {
-            tvShow = withContext(Dispatchers.IO) { provider.getTvShow(tvShowId) }
-            tvShow?.seasons?.firstOrNull()?.let { season ->
-                selectedSeason = season
-                episodes = withContext(Dispatchers.IO) { provider.getEpisodesBySeason(season.id) }
-            }
-        } catch (e: Exception) { error = e.message }
-        isLoading = false
+            val result = withContext(Dispatchers.IO) { provider.getTvShow(tvShowId) }
+            show = result
+            selectedSeason = result.seasons?.firstOrNull()
+        } catch (e: Exception) { }
+        finally { isLoading = false }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text(tvShow?.title ?: "Loading...") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
-        )
+    LaunchedEffect(selectedSeason) {
+        selectedSeason?.let { season ->
+            try {
+                episodes = withContext(Dispatchers.IO) { provider.getEpisodesBySeason(season.id ?: "") }
+            } catch (e: Exception) { }
+        }
+    }
 
-        when {
-            isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
-            error != null -> Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Error: $error", color = MaterialTheme.colorScheme.error) }
-            tvShow != null -> {
-                val show = tvShow!!
-                Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
-                    Text(show.title, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                    show.overview?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 8.dp)) }
-
-                    // Season tabs
-                    if (show.seasons.isNotEmpty()) {
-                        ScrollableTabRow(
-                            selectedTabIndex = show.seasons.indexOf(selectedSeason).coerceAtLeast(0),
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        ) {
-                            show.seasons.forEach { season ->
-                                Tab(
-                                    selected = season == selectedSeason,
-                                    onClick = {
-                                        selectedSeason = season
-                                        scope.launch {
-                                            try { episodes = withContext(Dispatchers.IO) { provider.getEpisodesBySeason(season.id) } }
-                                            catch (e: Exception) { error = e.message }
-                                        }
-                                    },
-                                    text = { Text(season.title ?: "Season ${season.number}") }
-                                )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            )
+        },
+        containerColor = Color(0xFF141414)
+    ) { paddingValues ->
+        if (isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color(0xFFE50914))
+            }
+        } else {
+            show?.let { s ->
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                    item {
+                        AsyncImage(
+                            url = s.banner ?: s.poster,
+                            modifier = Modifier.fillMaxWidth().height(350.dp),
+                            contentDescription = "Banner"
+                        )
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(s.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(8.dp))
+                            Text(s.overview ?: "", color = Color.LightGray, fontSize = 14.sp)
+                        }
+                    }
+                    
+                    s.seasons?.let { seasons ->
+                        item {
+                            var expanded by remember { mutableStateOf(false) }
+                            Box(modifier = Modifier.padding(16.dp)) {
+                                Button(onClick = { expanded = true }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A1A1A))) {
+                                    Text(selectedSeason?.title ?: "Select Season")
+                                }
+                                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                    seasons.forEach { season ->
+                                        DropdownMenuItem(
+                                            text = { Text(season.title ?: "Season ${season.number}") },
+                                            onClick = {
+                                                selectedSeason = season
+                                                expanded = false
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
 
-                    // Episode list
-                    LazyColumn {
-                        items(episodes) { episode ->
-                            ListItem(
-                                headlineContent = { Text("${episode.number}. ${episode.title ?: "Episode ${episode.number}"}") },
-                                supportingContent = { episode.overview?.let { Text(it, maxLines = 2) } },
-                                trailingContent = {
-                                    IconButton(onClick = {
-                                        scope.launch {
-                                            try {
-                                                val videoType = Video.Type.Episode(
-                                                    id = episode.id, number = episode.number,
-                                                    title = episode.title, poster = episode.poster, overview = episode.overview,
-                                                    tvShow = Video.Type.Episode.TvShow(show.id, show.title, show.poster, show.banner, null, show.imdbId),
-                                                    season = Video.Type.Episode.Season(selectedSeason?.number ?: 0, selectedSeason?.title)
-                                                )
-                                                val servers = withContext(Dispatchers.IO) { provider.getServers(episode.id, videoType) }
-                                                if (servers.isNotEmpty()) {
-                                                    val video = withContext(Dispatchers.IO) { provider.getVideo(servers.first()) }
-                                                    onPlay(video.source, video.headers)
-                                                }
-                                            } catch (e: Exception) { error = "Play error: ${e.message}" }
-                                        }
-                                    }) { Icon(Icons.Default.PlayArrow, "Play") }
-                                }
+                    items(episodes) { ep ->
+                        Row(modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onPlayVideo("dummy", null) }
+                            .padding(16.dp)
+                        ) {
+                            AsyncImage(
+                                url = ep.poster ?: s.poster,
+                                modifier = Modifier.width(120.dp).height(80.dp),
+                                contentDescription = "Episode Poster"
                             )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                            Spacer(Modifier.width(16.dp))
+                            Column {
+                                Text("${ep.number}. ${ep.title}", color = Color.White, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
