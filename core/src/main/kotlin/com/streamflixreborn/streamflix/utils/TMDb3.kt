@@ -2,6 +2,7 @@ package com.streamflixreborn.streamflix.utils
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.InstanceCreator
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -978,6 +979,18 @@ object TMDb3 {
                                     MultiItem::class.java,
                                     MultiItem.Deserializer()
                                 )
+                                .registerTypeAdapter(
+                                    PageResult::class.java,
+                                    InstanceCreator<PageResult<*>> { PageResult<Any>() }
+                                )
+                                .registerTypeAdapter(
+                                    Result::class.java,
+                                    InstanceCreator<Result<*>> { Result<Any>() }
+                                )
+                                .registerTypeAdapter(
+                                    GenresResponse::class.java,
+                                    InstanceCreator<GenresResponse> { GenresResponse() }
+                                )
                                 .create()
                         )
                     )
@@ -1082,19 +1095,25 @@ object TMDb3 {
 
 
     data class Result<T>(
-        val results: List<T>
-    )
+        @SerializedName("results") val results: List<T> = emptyList()
+    ) {
+        constructor() : this(emptyList())
+    }
 
     data class PageResult<T>(
-        @SerializedName("page") val page: Int,
+        @SerializedName("page") val page: Int = 1,
         @SerializedName("results") val results: List<T> = emptyList(),
-        @SerializedName("total_pages") val totalPages: Int,
-        @SerializedName("total_results") val totalResults: Int,
-    )
+        @SerializedName("total_pages") val totalPages: Int = 1,
+        @SerializedName("total_results") val totalResults: Int = 0,
+    ) {
+        constructor() : this(1, emptyList(), 1, 0)
+    }
 
     data class GenresResponse(
-        val genres: List<Genre>,
-    )
+        @SerializedName("genres") val genres: List<Genre> = emptyList(),
+    ) {
+        constructor() : this(emptyList())
+    }
 
     sealed class MultiItem {
 
