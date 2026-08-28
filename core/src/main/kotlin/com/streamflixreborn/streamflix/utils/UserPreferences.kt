@@ -8,18 +8,34 @@ import java.util.Properties
  * Stores settings in a local properties file.
  */
 object UserPreferences {
-    private val configFile = File(System.getProperty("user.home"), ".streamflix/config.properties")
+    private val configFile by lazy {
+        try {
+            val dir = File(System.getProperty("user.home"), ".streamflix")
+            dir.mkdirs()
+            File(dir, "config.properties")
+        } catch (e: Exception) {
+            File("config.properties")
+        }
+    }
     private val props = Properties()
 
     init {
-        configFile.parentFile?.mkdirs()
-        if (configFile.exists()) {
-            configFile.inputStream().use { props.load(it) }
+        try {
+            if (configFile.exists()) {
+                configFile.inputStream().use { props.load(it) }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     private fun save() {
-        configFile.outputStream().use { props.store(it, "Streamflix Configuration") }
+        try {
+            configFile.parentFile?.mkdirs()
+            configFile.outputStream().use { props.store(it, "Streamflix Configuration") }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     // Current provider is managed at runtime, not persisted here
