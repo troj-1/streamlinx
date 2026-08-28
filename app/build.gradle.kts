@@ -54,7 +54,7 @@ compose.desktop {
         mainClass = "com.streamflixreborn.streamflix.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Deb)
+            targetFormats(TargetFormat.Deb, TargetFormat.Msi, TargetFormat.Exe)
             packageName = "streamlinx"
             packageVersion = "0.0.1"
             description = "Streamlinx - Desktop & Linux Streaming Application"
