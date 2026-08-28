@@ -54,14 +54,10 @@ compose.desktop {
         mainClass = "com.streamflixreborn.streamflix.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Deb, TargetFormat.AppImage, TargetFormat.Rpm)
+            targetFormats(TargetFormat.Deb)
             packageName = "streamlinx"
             packageVersion = "0.0.1"
             description = "Streamlinx - Desktop & Linux Streaming Application"
-
-            linux {
-                iconFile.set(project.file("src/main/resources/icon.png"))
-            }
         }
     }
 }
