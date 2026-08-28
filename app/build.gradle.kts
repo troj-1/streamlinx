@@ -58,6 +58,7 @@ compose.desktop {
             packageName = "streamlinx"
             packageVersion = "0.0.1"
             description = "Streamlinx - Desktop & Linux Streaming Application"
+            modules("java.naming", "java.sql", "java.management", "java.instrument", "java.desktop", "jdk.unsupported", "java.security.jgss", "java.net.http")
 
             linux {
                 debPackageVersion = "0.0.1"

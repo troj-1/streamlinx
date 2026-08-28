@@ -37,10 +37,14 @@ object DnsResolver : Dns {
     override fun lookup(hostname: String): List<InetAddress> {
         return try {
             _internalDoh.lookup(hostname)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to resolve $hostname: ${e.message}")
-            if (_internalDoh === Dns.SYSTEM) throw e
-            Dns.SYSTEM.lookup(hostname)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Failed to resolve $hostname: ${t.message}")
+            try {
+                Dns.SYSTEM.lookup(hostname)
+            } catch (fallbackError: Throwable) {
+                Log.e(TAG, "System DNS lookup failed for $hostname: ${fallbackError.message}")
+                emptyList()
+            }
         }
     }
 
@@ -58,7 +62,7 @@ object DnsResolver : Dns {
     private fun buildDoh(url: String): Dns {
         return if (url.isNotEmpty()) {
             try { DnsOverHttps.Builder().client(client).url(url.toHttpUrl()).build() }
-            catch (e: Exception) { Log.e(TAG, "DoH error: ${e.message}"); Dns.SYSTEM }
+            catch (t: Throwable) { Log.e(TAG, "DoH error: ${t.message}"); Dns.SYSTEM }
         } else Dns.SYSTEM
     }
 }

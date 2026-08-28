@@ -788,82 +788,92 @@ class TmdbProvider(override val language: String) : Provider {
 
         Log.d("TmdbProvider", "getServers: lang=$language, simplifiedLang=$lang")
 
+        suspend fun safeAdd(block: suspend () -> Unit) {
+            try {
+                block()
+            } catch (t: Throwable) {
+                Log.e("TmdbProvider", "Extractor error: ${t.message}")
+            }
+        }
+
         when (lang) {
             "ru" -> {
                 // Russian servers: Native Russian Dubs first (Kodik / Collaps)
-                servers.addAll(RussianStreamExtractor().servers(videoType))
-                servers.addAll(searchNativeProviders(listOf(MEGAKinoProvider, FilmyOnlineCcProvider), videoType))
-                servers.addAll(VideasyExtractor().servers(videoType, "ru"))
-                servers.add(VixSrcExtractor().server(videoType, "ru"))
-                servers.addAll(PrimeSrcExtractor().servers(videoType))
+                safeAdd { servers.addAll(RussianStreamExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(searchNativeProviders(listOf(MEGAKinoProvider, FilmyOnlineCcProvider), videoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "ru")) }
+                safeAdd { servers.add(VixSrcExtractor().server(videoType, "ru")) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
             }
             "de" -> {
                 // German servers
-                servers.addAll(searchNativeProviders(listOf(FilmPalastProvider, SerienStreamProvider, HDFilmeProvider, MEGAKinoProvider), videoType))
-                servers.addAll(MoflixExtractor().servers(videoType))
+                safeAdd { servers.addAll(searchNativeProviders(listOf(FilmPalastProvider, SerienStreamProvider, HDFilmeProvider, MEGAKinoProvider), videoType)) }
+                safeAdd { servers.addAll(MoflixExtractor().servers(videoType)) }
                 if (videoType is Video.Type.Movie) {
-                    servers.add(EinschaltenExtractor().server(videoType))
+                    safeAdd { servers.add(EinschaltenExtractor().server(videoType)) }
                 }
-                servers.addAll(VideasyExtractor().servers(videoType, "de"))
-                servers.add(VixSrcExtractor().server(videoType, "de"))
-                servers.addAll(PrimeSrcExtractor().servers(videoType))
+                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "de")) }
+                safeAdd { servers.add(VixSrcExtractor().server(videoType, "de")) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
             }
             "it" -> {
                 // Italian servers
-                servers.addAll(searchNativeProviders(listOf(StreamingCommunityProvider("it"), Altadefinizione01Provider, CB01Provider, GuardaSerieProvider, AnimeWorldProvider, AnimeSaturnProvider), videoType))
-                servers.addAll(VideasyExtractor().servers(videoType, "it"))
-                servers.add(VixSrcExtractor().server(videoType, "it"))
-                servers.add(TwoEmbedExtractor().server(videoType))
-                servers.addAll(PrimeSrcExtractor().servers(videoType))
+                safeAdd { servers.addAll(searchNativeProviders(listOf(StreamingCommunityProvider("it"), Altadefinizione01Provider, CB01Provider, GuardaSerieProvider, AnimeWorldProvider, AnimeSaturnProvider), videoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "it")) }
+                safeAdd { servers.add(VixSrcExtractor().server(videoType, "it")) }
+                safeAdd { servers.add(TwoEmbedExtractor().server(videoType)) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
             }
             "fr" -> {
                 // French servers
-                servers.addAll(searchNativeProviders(listOf(FrenchStreamProvider, WiflixProvider, FrenchAnimeProvider, FrembedProvider), videoType))
-                servers.addAll(FrembedExtractor(UserPreferences.getProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL) ?: FrembedProvider.baseUrl).servers(videoType))
-                servers.addAll(VideasyExtractor().servers(videoType, "fr"))
-                servers.add(VixSrcExtractor().server(videoType, "fr"))
-                servers.addAll(PrimeSrcExtractor().servers(videoType))
+                safeAdd { servers.addAll(searchNativeProviders(listOf(FrenchStreamProvider, WiflixProvider, FrenchAnimeProvider, FrembedProvider), videoType)) }
+                safeAdd { servers.addAll(FrembedExtractor(UserPreferences.getProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL) ?: FrembedProvider.baseUrl).servers(videoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "fr")) }
+                safeAdd { servers.add(VixSrcExtractor().server(videoType, "fr")) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
             }
             "pl" -> {
                 // Polish servers
-                servers.addAll(searchNativeProviders(listOf(FilmyOnlineCcProvider, ZaluknijProvider), videoType))
-                servers.addAll(VideasyExtractor().servers(videoType, "pl"))
-                servers.add(VixSrcExtractor().server(videoType, "pl"))
-                servers.add(TwoEmbedExtractor().server(videoType))
-                servers.addAll(PrimeSrcExtractor().servers(videoType))
+                safeAdd { servers.addAll(searchNativeProviders(listOf(FilmyOnlineCcProvider, ZaluknijProvider), videoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "pl")) }
+                safeAdd { servers.add(VixSrcExtractor().server(videoType, "pl")) }
+                safeAdd { servers.add(TwoEmbedExtractor().server(videoType)) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
             }
             "pt" -> {
                 // Portuguese servers
-                servers.addAll(VideasyExtractor().servers(videoType, "pt"))
-                servers.add(VixSrcExtractor().server(videoType, "pt"))
-                servers.add(TwoEmbedExtractor().server(videoType))
-                servers.addAll(PrimeSrcExtractor().servers(videoType))
+                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "pt")) }
+                safeAdd { servers.add(VixSrcExtractor().server(videoType, "pt")) }
+                safeAdd { servers.add(TwoEmbedExtractor().server(videoType)) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
             }
             "es" -> {
                 // Spanish servers
-                servers.addAll(searchNativeProviders(
-                    listOf(CuevanaEuProvider, PelisplustoProvider, SoloLatinoProvider, CineCalidadProvider, PoseidonHD2Provider),
-                    videoType,
-                    listOf("[LAT]", "[CAST]", "[CAS]", "[ES]", "(LAT)", "(ESP)", "LATINO", "CASTELLANO")
-                ))
-                servers.addAll(VideasyExtractor().servers(videoType, "es"))
-                servers.add(VixSrcExtractor().server(videoType, "es"))
-                servers.addAll(PrimeSrcExtractor().servers(videoType))
+                safeAdd {
+                    servers.addAll(searchNativeProviders(
+                        listOf(CuevanaEuProvider, PelisplustoProvider, SoloLatinoProvider, CineCalidadProvider, PoseidonHD2Provider),
+                        videoType,
+                        listOf("[LAT]", "[CAST]", "[CAS]", "[ES]", "(LAT)", "(ESP)", "LATINO", "CASTELLANO")
+                    ))
+                }
+                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "es")) }
+                safeAdd { servers.add(VixSrcExtractor().server(videoType, "es")) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
             }
             else -> {
                 // English (en) or other non-specific languages
-                servers.addAll(searchNativeProviders(listOf(SflixProvider, RidomoviesProvider), videoType))
-                servers.addAll(VideasyExtractor().servers(videoType, "en"))
-                servers.add(VixSrcExtractor().server(videoType, "en"))
-                servers.add(TwoEmbedExtractor().server(videoType))
-                servers.add(VidsrcNetExtractor().server(videoType))
-                servers.add(VidflixExtractor().server(videoType))
+                safeAdd { servers.addAll(searchNativeProviders(listOf(SflixProvider, RidomoviesProvider), videoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "en")) }
+                safeAdd { servers.add(VixSrcExtractor().server(videoType, "en")) }
+                safeAdd { servers.add(TwoEmbedExtractor().server(videoType)) }
+                safeAdd { servers.add(VidsrcNetExtractor().server(videoType)) }
+                safeAdd { servers.add(VidflixExtractor().server(videoType)) }
                 if (videoType is Video.Type.Movie) {
-                    servers.add(MoviesapiExtractor().server(videoType))
+                    safeAdd { servers.add(MoviesapiExtractor().server(videoType)) }
                 }
-                servers.addAll(VidrockExtractor().servers(videoType))
-                servers.addAll(VidzeeExtractor().servers(videoType))
-                servers.addAll(PrimeSrcExtractor().servers(videoType))
+                safeAdd { servers.addAll(VidrockExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(VidzeeExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
             }
         }
 

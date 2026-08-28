@@ -10,7 +10,6 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
-    implementation("dnsjava:dnsjava:3.6.3")
 
     // HTML Parsing
     implementation("org.jsoup:jsoup:1.19.1")
