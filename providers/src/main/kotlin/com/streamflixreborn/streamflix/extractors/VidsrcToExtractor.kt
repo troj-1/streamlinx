@@ -1,9 +1,7 @@
 package com.streamflixreborn.streamflix.extractors
 
-import java.util.Base64
 import com.tanasi.retrofit_jsoup.converter.JsoupConverterFactory
 import com.streamflixreborn.streamflix.models.Video
-import com.streamflixreborn.streamflix.utils.DnsResolver
 import com.streamflixreborn.streamflix.utils.retry
 import okhttp3.OkHttpClient
 import org.jsoup.nodes.Document
@@ -14,6 +12,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Url
 import java.net.URLDecoder
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 
@@ -84,7 +83,11 @@ class VidsrcToExtractor : Extractor() {
     }
 
     private fun decryptUrl(key: String, encUrl: String): String {
-        var data = Base64.getDecoder().decode(encUrl.toByteArray())
+        var data = try {
+            Base64.getUrlDecoder().decode(encUrl.toByteArray())
+        } catch (_: Exception) {
+            Base64.getDecoder().decode(encUrl.toByteArray())
+        }
         val rc4Key = SecretKeySpec(key.toByteArray(), "RC4")
         val cipher = Cipher.getInstance("RC4")
         cipher.init(Cipher.DECRYPT_MODE, rc4Key, cipher.parameters)
@@ -95,7 +98,7 @@ class VidsrcToExtractor : Extractor() {
     private fun encode(key: String, vId: String): String {
         val decodedId = decodeData(key, vId)
 
-        val encodedBase64 = Base64.getEncoder().encode(decodedId).toString(Charsets.UTF_8)
+        val encodedBase64 = Base64.getEncoder().encodeToString(decodedId)
 
         val decodedResult = encodedBase64
             .replace("/", "_")
@@ -133,10 +136,10 @@ class VidsrcToExtractor : Extractor() {
     private interface Service {
 
         companion object {
-            val client = OkHttpClient.Builder()
-                .dns(DnsResolver.doh)
-                .build()
             fun build(baseUrl: String): Service {
+                val client = OkHttpClient.Builder()
+                    .build()
+
                 val retrofit = Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .client(client)

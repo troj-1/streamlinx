@@ -22,6 +22,7 @@ import com.streamflixreborn.streamflix.utils.TmdbUtils
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.Jsoup
+
 import retrofit2.Retrofit
 import okhttp3.OkHttpClient
 import okhttp3.Interceptor
@@ -39,8 +40,8 @@ import retrofit2.http.Path
 object HDFilmeProvider : Provider {
 
     override val name: String = "HDFilme"
-    override val baseUrl: String = "https://hdfilme.win"
-    override val logo: String = "$baseUrl/templates/hdfilme/images/apple-touch-icon.png"
+    override val baseUrl: String = "https://hdfilme.win/"
+    override val logo: String = "${baseUrl}templates/hdfilme/images/apple-touch-icon.png"
     override val language: String = "de"
 
     private const val USER_AGENT = "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -48,19 +49,18 @@ object HDFilmeProvider : Provider {
     private interface HDFilmeService {
         companion object {
             fun build(baseUrl: String): HDFilmeService {
-                val clientBuilder = OkHttpClient.Builder()
+                val client = OkHttpClient.Builder()
                     .readTimeout(30, TimeUnit.SECONDS)
                     .connectTimeout(30, TimeUnit.SECONDS)
                     .followRedirects(false)
                     .followSslRedirects(false)
-
-                val client = clientBuilder
                     .addInterceptor(RedirectInterceptor())
                     .dns(DnsResolver.doh)
                     .build()
 
+                val validBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
                 return Retrofit.Builder()
-                    .baseUrl(baseUrl)
+                    .baseUrl(validBaseUrl)
                     .addConverterFactory(JsoupConverterFactory.create())
                     .client(client)
                     .build()
@@ -71,7 +71,6 @@ object HDFilmeProvider : Provider {
                 override fun intercept(chain: Interceptor.Chain): Response {
                     var request = chain.request()
                     var response = chain.proceed(request)
-
                     while (response.isRedirect) {
                         val location = response.header("Location") ?: break
                         val newUrl = request.url.resolve(location) ?: break

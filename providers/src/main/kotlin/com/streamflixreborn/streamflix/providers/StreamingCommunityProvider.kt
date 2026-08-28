@@ -53,7 +53,7 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
 
     private val DEFAULT_DOMAIN: String = "streamingunity.cc"
     private val BLOCKED_DOMAINS = setOf("streamingcommunityz.green", "streamingunity.club", "streamingunity.bike", "streamingcommunityz.buzz")
-    override val baseUrl = DEFAULT_DOMAIN
+    override val baseUrl = "https://$DEFAULT_DOMAIN/"
     private var _domain: String? = null
     private var domain: String
         get() {
@@ -63,7 +63,6 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
             val storedDomain: String? = null
 
             if (storedDomain.isNullOrEmpty() || BLOCKED_DOMAINS.any { storedDomain.contains(it) }) {
-                if (!storedDomain.isNullOrEmpty()) // null = DEFAULT_DOMAIN
                 _domain = DEFAULT_DOMAIN
             } else {
                 _domain = storedDomain

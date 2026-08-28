@@ -104,7 +104,13 @@ abstract class Extractor {
             HxfileExtractor(),
             ZillaExtractor(),
             PDrainExtractor(),
+            VixSrcExtractor(),
+            VidsrcNetExtractor(),
+            VidflixExtractor(),
+            AfterDarkExtractor(),
+            RpmvidExtractor(),
             MaxstreamExtractor(),
+            RussianStreamExtractor(),
         )
 
         suspend fun extract(link: String, server: Video.Server? = null): Video {

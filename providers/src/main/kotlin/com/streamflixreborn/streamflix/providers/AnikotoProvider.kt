@@ -250,18 +250,16 @@ object AnikotoProvider : Provider {
     }
 
     override suspend fun getServers(id: String, videoType: Video.Type): List<Video.Server> {
-        val (episodeToken, referer) = when (videoType) {
-            is Video.Type.Movie -> {
-                val document = service.getPage(id.toAbsoluteUrl())
-                val firstEpisodeId = getEpisodesBySeason(id.toAbsoluteUrl()).firstOrNull()?.id.orEmpty()
-                firstEpisodeId.substringBefore("|") to firstEpisodeId.substringAfter("|", id.toAbsoluteUrl())
-            }
-            is Video.Type.Episode -> id.substringBefore("|") to id.substringAfter("|", baseUrl)
-        }
+        val referer = if (id.contains("http")) id.substring(id.indexOf("http")) else baseUrl
+        val episodeToken = if (id.contains("http")) id.substring(0, id.indexOf("http")).trimEnd('|') else id
 
         if (episodeToken.isBlank()) return emptyList()
 
-        val response = service.getServers(episodeToken, referer = referer)
+        val response = try {
+            service.getServers(episodeToken, referer = referer)
+        } catch (e: Exception) {
+            return emptyList()
+        }
         val document = Jsoup.parse(response.result.orEmpty())
 
         return document.select(".servers .type").flatMap { type ->

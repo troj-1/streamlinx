@@ -1,0 +1,13 @@
+.gradle
+build/
+*/build/
+**/build/
+*.class
+.idea/
+*.iml
+.DS_Store
+app/cacheDir/
+app/vlc-native/
+local.properties
+.vscode/
+.kotlin/

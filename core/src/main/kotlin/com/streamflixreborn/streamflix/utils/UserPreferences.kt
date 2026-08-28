@@ -26,11 +26,11 @@ object UserPreferences {
     var currentProvider: Any? = null
 
     var dohProviderUrl: String
-        get() = props.getProperty("doh_url", "")
+        get() = props.getProperty("doh_url", "https://cloudflare-dns.com/dns-query").ifBlank { "https://cloudflare-dns.com/dns-query" }
         set(value) { props.setProperty("doh_url", value); save() }
 
     var tmdbApiKey: String
-        get() = props.getProperty("tmdb_api_key", System.getenv("TMDB_API_KEY") ?: "")
+        get() = props.getProperty("tmdb_api_key", System.getenv("TMDB_API_KEY") ?: "adc5047f27e588c9347087931a696cf4")
         set(value) { props.setProperty("tmdb_api_key", value); save() }
 
     var subtitleLanguage: String
@@ -48,6 +48,14 @@ object UserPreferences {
     var appLanguage: String
         get() = props.getProperty("app_language", "en")
         set(value) { props.setProperty("app_language", value); save() }
+
+    var providerLanguage: String?
+        get() = props.getProperty("provider_language")
+        set(value) {
+            if (value != null) props.setProperty("provider_language", value)
+            else props.remove("provider_language")
+            save()
+        }
 
     var isNsfwEnabled: Boolean
         get() = props.getProperty("nsfw_enabled", "false").toBoolean()

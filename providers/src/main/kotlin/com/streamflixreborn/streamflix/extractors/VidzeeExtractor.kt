@@ -6,6 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.security.MessageDigest
+import java.util.concurrent.TimeUnit
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.IvParameterSpec
@@ -20,7 +21,13 @@ class VidzeeExtractor : Extractor() {
     private val coreApi = "https://core.vidzee.wtf"
     private val staticPass = "4f2a9c7d1e8b3a6f0d5c2e9a7b1f4d8c"
 
-    private val client = OkHttpClient.Builder().build()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(3, TimeUnit.SECONDS)
+        .readTimeout(3, TimeUnit.SECONDS)
+        .build()
+
+    private var cachedMasterKey: String? = null
+    private var keyFetchAttempted = false
 
     data class ServerConfig(
         val name: String,
@@ -123,6 +130,9 @@ class VidzeeExtractor : Extractor() {
     }
 
     private fun getMasterKey(): String? {
+        if (cachedMasterKey != null) return cachedMasterKey
+        if (keyFetchAttempted) return null
+        keyFetchAttempted = true
         return try {
             val request = Request.Builder()
                 .url("$coreApi/api-key")
@@ -154,7 +164,9 @@ class VidzeeExtractor : Extractor() {
             val combined = ciphertext + tag
             val decrypted = cipher.doFinal(combined)
             
-            String(decrypted, Charsets.UTF_8)
+            val result = String(decrypted, Charsets.UTF_8)
+            cachedMasterKey = result
+            result
         } catch (e: Exception) {
             null
         }

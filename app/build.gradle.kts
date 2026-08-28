@@ -42,6 +42,11 @@ dependencies {
 
     // Networking (for image loading)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Embedded video player (VLCJ)
+    implementation("uk.co.caprica:vlcj:4.8.3")
+
+    testImplementation(kotlin("test"))
 }
 
 compose.desktop {

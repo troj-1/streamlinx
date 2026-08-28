@@ -50,16 +50,16 @@ class VideasyExtractor : Extractor() {
                 }
             }
             else -> {
-                val serverName = when (language) {
-                    "de" -> "Killjoy (Videasy)"
-                    else -> return emptyList()
-                }
-                
                 val videasyLang = when (language) {
                     "de" -> "german"
+                    "ru" -> "russian"
+                    "it" -> "italian"
+                    "fr" -> "french"
+                    "es" -> "spanish"
+                    "pl" -> "polish"
                     else -> return emptyList()
                 }
-
+                val serverName = "Videasy (${language.uppercase()})"
                 val endpoint = "meine"
 
                 val url = when (videoType) {
@@ -105,6 +105,7 @@ class VideasyExtractor : Extractor() {
         val json = JSONObject()
         json.put("text", encData)
         json.put("id", tmdbId)
+        json.put("seed", "seed")
 
         val body = json.toString().toRequestBody("application/json".toMediaType())
         val decRequest = Request.Builder()
@@ -114,8 +115,11 @@ class VideasyExtractor : Extractor() {
         
         val decResponse = client.newCall(decRequest).execute()
         val decBody = decResponse.body?.string() ?: "{}"
-        val decJson = JSONObject(decBody)
+        val decJson = if (decBody.startsWith("{")) JSONObject(decBody) else JSONObject()
         val result = decJson.optString("result")
+        if (result.isBlank() || !result.trim().startsWith("{")) {
+            throw Exception("Videasy decryption response invalid: $decBody")
+        }
 
         // 4. Parse result (JSON string containing sources)
         val resultJson = JSONObject(result)

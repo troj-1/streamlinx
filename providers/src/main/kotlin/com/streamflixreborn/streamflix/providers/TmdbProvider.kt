@@ -2,16 +2,21 @@ package com.streamflixreborn.streamflix.providers
 
 import com.streamflixreborn.streamflix.compat.Item
 import com.streamflixreborn.streamflix.extractors.Extractor
+import com.streamflixreborn.streamflix.extractors.AfterDarkExtractor
 import com.streamflixreborn.streamflix.extractors.MoflixExtractor
 import com.streamflixreborn.streamflix.extractors.MoviesapiExtractor
 import com.streamflixreborn.streamflix.extractors.TwoEmbedExtractor
+import com.streamflixreborn.streamflix.extractors.VidsrcNetExtractor
 import com.streamflixreborn.streamflix.extractors.VidsrcToExtractor
+import com.streamflixreborn.streamflix.extractors.VidflixExtractor
 import com.streamflixreborn.streamflix.extractors.VidzeeExtractor
+import com.streamflixreborn.streamflix.extractors.VixSrcExtractor
 import com.streamflixreborn.streamflix.extractors.EinschaltenExtractor
 import com.streamflixreborn.streamflix.extractors.FrembedExtractor
 import com.streamflixreborn.streamflix.extractors.VidrockExtractor
 import com.streamflixreborn.streamflix.extractors.VideasyExtractor
 import com.streamflixreborn.streamflix.extractors.PrimeSrcExtractor
+import com.streamflixreborn.streamflix.extractors.RussianStreamExtractor
 import com.streamflixreborn.streamflix.models.Category
 import com.streamflixreborn.streamflix.models.Episode
 import com.streamflixreborn.streamflix.models.Genre
@@ -710,6 +715,73 @@ class TmdbProvider(override val language: String) : Provider {
         return people
     }
 
+    private suspend fun searchNativeProviders(
+        providers: List<Provider>,
+        videoType: Video.Type,
+        filterKeywords: List<String> = emptyList()
+    ): List<Video.Server> = coroutineScope {
+        val targetTitle = when (videoType) {
+            is Video.Type.Movie -> videoType.title
+            is Video.Type.Episode -> videoType.tvShow.title
+        }
+        if (targetTitle.isBlank()) return@coroutineScope emptyList()
+
+        fun isMatch(item: Item, target: String): Boolean {
+            val isCorrectType = if (videoType is Video.Type.Movie) item is Movie else item is TvShow
+            if (!isCorrectType) return false
+
+            val itemTitle = if (item is Movie) item.title else (item as TvShow).title
+            val nItem = itemTitle.lowercase().replace(Regex("[^a-z0-9а-яё]"), "")
+            val nTarget = target.lowercase().replace(Regex("[^a-z0-9а-яё]"), "")
+            
+            if (nItem.isNotEmpty() && nTarget.isNotEmpty() && (nItem == nTarget || nItem.contains(nTarget) || nTarget.contains(nItem))) {
+                return true
+            }
+            
+            val cleanWords: (String) -> Set<String> = { s ->
+                s.lowercase()
+                    .replace(Regex("[^a-z0-9а-яё ]"), " ")
+                    .split(Regex("\\s+"))
+                    .filter { it.length > 2 }
+                    .toSet()
+            }
+            val nItemWords = cleanWords(itemTitle)
+            val nTargetWords = cleanWords(target)
+            
+            if (nItemWords.isEmpty() || nTargetWords.isEmpty()) return false
+            if (nTargetWords.size == 1) return nItemWords.contains(nTargetWords.first())
+            return nItemWords.containsAll(nTargetWords) || nTargetWords.containsAll(nItemWords)
+        }
+
+        val deferred = providers.map { provider ->
+            async {
+                try {
+                    val searchResults = provider.search(targetTitle, 1)
+                    val bestMatch = searchResults.firstOrNull { isMatch(it, targetTitle) }
+                    val id = if (bestMatch is Movie) bestMatch.id else (bestMatch as? TvShow)?.id
+                    
+                    if (id != null) {
+                        val allServers = provider.getServers(id, videoType)
+                        if (filterKeywords.isEmpty()) {
+                            allServers
+                        } else {
+                            val filtered = allServers.filter { s ->
+                                val n = s.name.uppercase()
+                                filterKeywords.any { kw -> n.contains(kw.uppercase()) }
+                            }
+                            if (filtered.isNotEmpty()) filtered else allServers
+                        }
+                    } else {
+                        emptyList()
+                    }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+        }
+        deferred.awaitAll().flatten()
+    }
+
     override suspend fun getServers(id: String, videoType: Video.Type): List<Video.Server> {
         val servers = mutableListOf<Video.Server>()
         val lang = language.lowercase().substringBefore("-")
@@ -717,144 +789,146 @@ class TmdbProvider(override val language: String) : Provider {
         Log.d("TmdbProvider", "getServers: lang=$language, simplifiedLang=$lang")
 
         when (lang) {
-            "it" -> {
-                // Se la lingua Ã¨ italiano, includiamo solo i server noti per l'italiano.
+            "ru" -> {
+                // Russian servers: Native Russian Dubs first (Kodik / Collaps)
+                servers.addAll(RussianStreamExtractor().servers(videoType))
+                servers.addAll(searchNativeProviders(listOf(MEGAKinoProvider, FilmyOnlineCcProvider), videoType))
+                servers.addAll(VideasyExtractor().servers(videoType, "ru"))
+                servers.add(VixSrcExtractor().server(videoType, "ru"))
+                servers.addAll(PrimeSrcExtractor().servers(videoType))
             }
             "de" -> {
-                // Solo server tedeschi
-                servers.addAll(0, MoflixExtractor().servers(videoType))
+                // German servers
+                servers.addAll(searchNativeProviders(listOf(FilmPalastProvider, SerienStreamProvider, HDFilmeProvider, MEGAKinoProvider), videoType))
+                servers.addAll(MoflixExtractor().servers(videoType))
                 if (videoType is Video.Type.Movie) {
                     servers.add(EinschaltenExtractor().server(videoType))
                 }
-                VideasyExtractor().server(videoType, language)?.let { servers.add(it) }
+                servers.addAll(VideasyExtractor().servers(videoType, "de"))
+                servers.add(VixSrcExtractor().server(videoType, "de"))
+                servers.addAll(PrimeSrcExtractor().servers(videoType))
+            }
+            "it" -> {
+                // Italian servers
+                servers.addAll(searchNativeProviders(listOf(StreamingCommunityProvider("it"), Altadefinizione01Provider, CB01Provider, GuardaSerieProvider, AnimeWorldProvider, AnimeSaturnProvider), videoType))
+                servers.addAll(VideasyExtractor().servers(videoType, "it"))
+                servers.add(VixSrcExtractor().server(videoType, "it"))
+                servers.add(TwoEmbedExtractor().server(videoType))
+                servers.addAll(PrimeSrcExtractor().servers(videoType))
             }
             "fr" -> {
-                // Solo server francesi
+                // French servers
+                servers.addAll(searchNativeProviders(listOf(FrenchStreamProvider, WiflixProvider, FrenchAnimeProvider, FrembedProvider), videoType))
                 servers.addAll(FrembedExtractor(UserPreferences.getProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL) ?: FrembedProvider.baseUrl).servers(videoType))
+                servers.addAll(VideasyExtractor().servers(videoType, "fr"))
+                servers.add(VixSrcExtractor().server(videoType, "fr"))
+                servers.addAll(PrimeSrcExtractor().servers(videoType))
+            }
+            "pl" -> {
+                // Polish servers
+                servers.addAll(searchNativeProviders(listOf(FilmyOnlineCcProvider, ZaluknijProvider), videoType))
+                servers.addAll(VideasyExtractor().servers(videoType, "pl"))
+                servers.add(VixSrcExtractor().server(videoType, "pl"))
+                servers.add(TwoEmbedExtractor().server(videoType))
+                servers.addAll(PrimeSrcExtractor().servers(videoType))
+            }
+            "pt" -> {
+                // Portuguese servers
+                servers.addAll(VideasyExtractor().servers(videoType, "pt"))
+                servers.add(VixSrcExtractor().server(videoType, "pt"))
+                servers.add(TwoEmbedExtractor().server(videoType))
+                servers.addAll(PrimeSrcExtractor().servers(videoType))
             }
             "es" -> {
-                // TMDB Spagnolo: Utilizza ESCLUSIVAMENTE server certificati con audio spagnolo ([LAT] o [CAST])
-                
-                val targetTitle = when (videoType) {
-                    is Video.Type.Movie -> videoType.title
-                    is Video.Type.Episode -> videoType.tvShow.title
-                }
-                
-                Log.i("StreamFlixES", "[SEARCH START] -> Target: $targetTitle (${if (videoType is Video.Type.Movie) "Movie" else "TV Show"})")
-
-                // Funzione di matching rigorosa per i titoli e tipo
-                fun isMatch(item: Item, target: String): Boolean {
-                    val isCorrectType = if (videoType is Video.Type.Movie) item is Movie else item is TvShow
-                    if (!isCorrectType) return false
-
-                    val itemTitle = if (item is Movie) item.title else (item as TvShow).title
-                    val nItem = itemTitle.lowercase().replace(Regex("[^a-z0-9]"), "")
-                    val nTarget = target.lowercase().replace(Regex("[^a-z0-9]"), "")
-                    
-                    // Match esatto (normalizzato) ha la prioritÃ 
-                    if (nItem == nTarget) return true
-                    
-                    // Match parziale se contenuto e differenza lunghezza minima
-                    if (nItem.contains(nTarget) || nTarget.contains(nItem)) {
-                        val diff = Math.abs(nItem.length - nTarget.length)
-                        if (diff <= 5) return true
-                    }
-                    
-                    // Match per parole (almeno una deve corrispondere esattamente se il target Ã¨ corto, o tutte se lungo)
-                    val cleanWords: (String) -> Set<String> = { s ->
-                        s.lowercase()
-                            .replace(Regex("[^a-z0-9 ]"), " ")
-                            .split(Regex("\\s+"))
-                            .filter { it.length > 2 }
-                            .toSet()
-                    }
-                    val nItemWords = cleanWords(itemTitle)
-                    val nTargetWords = cleanWords(target)
-                    
-                    if (nItemWords.isEmpty() || nTargetWords.isEmpty()) return false
-                    
-                    // Se il target ha solo una parola importante, deve esserci
-                    if (nTargetWords.size == 1) return nItemWords.contains(nTargetWords.first())
-                    
-                    // Altrimenti tutte le parole del target devono essere presenti nell'item
-                    return nItemWords.containsAll(nTargetWords) || nTargetWords.containsAll(nItemWords)
-                }
-
-                coroutineScope {
-                    val providers = listOf(CuevanaEuProvider, PelisplustoProvider, SoloLatinoProvider, CineCalidadProvider, PoseidonHD2Provider)
-                    val deferred = providers.map { provider ->
-                        async {
-                            try {
-                                val searchResults = provider.search(targetTitle, 1)
-                                val bestMatch = searchResults.firstOrNull { isMatch(it, targetTitle) }
-                                val id = if (bestMatch is Movie) bestMatch.id else (bestMatch as? TvShow)?.id
-                                
-                                if (id != null) {
-                                    val matchTitle = if (bestMatch is Movie) bestMatch.title else (bestMatch as? TvShow)?.title
-                                    Log.i("StreamFlixES", "[MATCH FOUND] -> Provider: ${provider.name}, Matched: '$matchTitle', ID: $id")
-                                    
-                                    val allServers = provider.getServers(id, videoType)
-                                    val filtered = allServers.filter { s ->
-                                        val n = s.name.uppercase()
-                                        n.contains("[LAT]") || n.contains("[CAST]") || n.contains("[CAS]") || n.contains("[ES]") ||
-                                        n.contains("(LAT)") || n.contains("(ESP)") || n.contains("LATINO") || n.contains("CASTELLANO")
-                                    }
-                                    Log.i("StreamFlixES", "[SERVERS OK] -> ${provider.name}: ${filtered.size}/${allServers.size} servers kept")
-                                    filtered
-                                } else {
-                                    Log.d("StreamFlixES", "[NO MATCH] -> ${provider.name} did not find a valid match for '$targetTitle'")
-                                    emptyList()
-                                }
-                            } catch (e: Exception) { 
-                                Log.e("StreamFlixES", "[PROVIDER ERROR] -> ${provider.name}: ${e.message}")
-                                emptyList() 
-                            }
-                        }
-                    }
-                    servers.addAll(deferred.awaitAll().flatten())
-                }
+                // Spanish servers
+                servers.addAll(searchNativeProviders(
+                    listOf(CuevanaEuProvider, PelisplustoProvider, SoloLatinoProvider, CineCalidadProvider, PoseidonHD2Provider),
+                    videoType,
+                    listOf("[LAT]", "[CAST]", "[CAS]", "[ES]", "(LAT)", "(ESP)", "LATINO", "CASTELLANO")
+                ))
+                servers.addAll(VideasyExtractor().servers(videoType, "es"))
+                servers.add(VixSrcExtractor().server(videoType, "es"))
+                servers.addAll(PrimeSrcExtractor().servers(videoType))
             }
             else -> {
-                // Per inglese (en) o altre lingue non specifiche, usiamo i server globali
-                servers.addAll(listOf(
-                    TwoEmbedExtractor().server(videoType),
-                ))
-
+                // English (en) or other non-specific languages
+                servers.addAll(searchNativeProviders(listOf(SflixProvider, RidomoviesProvider), videoType))
+                servers.addAll(VideasyExtractor().servers(videoType, "en"))
+                servers.add(VixSrcExtractor().server(videoType, "en"))
+                servers.add(TwoEmbedExtractor().server(videoType))
+                servers.add(VidsrcNetExtractor().server(videoType))
+                servers.add(VidflixExtractor().server(videoType))
                 if (videoType is Video.Type.Movie) {
-                    servers.add(2, MoviesapiExtractor().server(videoType))
+                    servers.add(MoviesapiExtractor().server(videoType))
                 }
-
                 servers.addAll(VidrockExtractor().servers(videoType))
                 servers.addAll(VidzeeExtractor().servers(videoType))
                 servers.addAll(PrimeSrcExtractor().servers(videoType))
-
-                if (language == "en") {
-                    servers.addAll(1, VideasyExtractor().servers(videoType, language))
-                }
             }
         }
 
-        // ORDINE PRIORITÃ€ FINALE: Portiamo i server con audio Spagnolo e Filemoon in cima
-        val finalServers = if (language.startsWith("es")) {
-            servers.sortedByDescending { server ->
-                val n = server.name.uppercase()
-                when {
-                    // Filemoon e tag audio spagnoli hanno la massima prioritÃ 
-                    n.contains("FILEMOON") -> 110
-                    n.contains("[CAS]") || n.contains("[LAT]") || n.contains("[ES]") || n.contains("SPAIN") || n.contains("[CAST]") ||
-                    n.contains("LATINO") || n.contains("SPANISH") || n.contains("CASTELLANO") || n.contains("(LAT)") || n.contains("(ESP)") -> 100
-                    
-                    // Altri aggregatori multi-lingua
-                    n.contains("VIDSRC") || n.contains("VIDLINK") -> 80
-                    
-                    // Sottotitoli o inglese
-                    n.contains("[EN]") || n.contains("[SUB]") || n.contains("(EN)") || n.contains("(SUB)") -> 50
-                    
-                    else -> 0
+        // Final sorting to prioritize target language servers and fast reliable extractors
+        val finalServers = servers.sortedByDescending { server ->
+            val n = server.name.uppercase()
+            when (lang) {
+                "ru" -> when {
+                    n.contains("KODIK") || n.contains("COLLAPS") || n.contains("🇷🇺") || n.contains("DUB") || n.contains("RUS") -> 150
+                    n.contains("VIXSRC") -> 120
+                    n.contains("FILEMOON") -> 100
+                    n.contains("VIDEASY") -> 80
+                    else -> 50
+                }
+                "de" -> when {
+                    n.contains("MOFLIX") || n.contains("FILMPALAST") || n.contains("SERIENSTREAM") || n.contains("HDFILME") || n.contains("MEGAKINO") || n.contains("EINSCHALTEN") -> 150
+                    n.contains("VIXSRC") -> 120
+                    n.contains("FILEMOON") || n.contains("VOE") -> 100
+                    n.contains("VIDEASY") -> 80
+                    else -> 50
+                }
+                "it" -> when {
+                    n.contains("STREAMINGCOMMUNITY") || n.contains("ALTADEFINIZIONE") || n.contains("CB01") || n.contains("GUARDASERIE") || n.contains("ANIMWORLD") || n.contains("ANIMESATURN") -> 150
+                    n.contains("VIXSRC") -> 120
+                    n.contains("FILEMOON") -> 100
+                    n.contains("VIDEASY") -> 80
+                    else -> 50
+                }
+                "es" -> when {
+                    n.contains("FILEMOON") || n.contains("[CAS]") || n.contains("[LAT]") || n.contains("[ES]") || n.contains("SPAIN") || n.contains("[CAST]") ||
+                    n.contains("LATINO") || n.contains("SPANISH") || n.contains("CASTELLANO") || n.contains("(LAT)") || n.contains("(ESP)") -> 150
+                    n.contains("VIXSRC") -> 120
+                    n.contains("VIDEASY") -> 80
+                    else -> 50
+                }
+                "fr" -> when {
+                    n.contains("FRENCHSTREAM") || n.contains("WIFLIX") || n.contains("FRENCHANIME") || n.contains("FREMBED") -> 150
+                    n.contains("VIXSRC") -> 120
+                    n.contains("FILEMOON") -> 100
+                    n.contains("VIDEASY") -> 80
+                    else -> 50
+                }
+                "pl" -> when {
+                    n.contains("FILMYONLINE") || n.contains("ZALUKNIJ") -> 150
+                    n.contains("VIXSRC") -> 120
+                    n.contains("FILEMOON") -> 100
+                    n.contains("VIDEASY") -> 80
+                    else -> 50
+                }
+                "pt" -> when {
+                    n.contains("[PT]") || n.contains("[BR]") || n.contains("PORTUGUESE") || n.contains("DUBLADO") -> 150
+                    n.contains("VIXSRC") -> 120
+                    n.contains("FILEMOON") -> 100
+                    n.contains("VIDEASY") -> 80
+                    else -> 50
+                }
+                else -> when {
+                    n.contains("VIXSRC") -> 150
+                    n.contains("SFLIX") || n.contains("RIDOMOVIES") -> 130
+                    n.contains("FILEMOON") || n.contains("VOE") -> 110
+                    n.contains("2EMBED") || n.contains("VIDSRC") || n.contains("VIDFLIX") || n.contains("VIDZEE") -> 100
+                    n.contains("VIDEASY") -> 80
+                    else -> 50
                 }
             }
-        } else {
-            servers
         }
 
         Log.i("StreamFlixES", "[SERVERS LIST] -> Found ${finalServers.size} servers: ${finalServers.joinToString { it.name }}")
