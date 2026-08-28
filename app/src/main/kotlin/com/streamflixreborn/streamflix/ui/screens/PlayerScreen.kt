@@ -162,23 +162,42 @@ fun PlayerScreen(
                     "/usr/lib/x86_64-linux-gnu",
                     "/usr/lib",
                     "/usr/lib64",
+                    "/usr/local/lib",
+                    "/usr/lib/aarch64-linux-gnu",
                     "/snap/vlc/current/usr/lib",
                     "/Applications/VLC.app/Contents/MacOS/lib"
                 )
+                var foundPath: String? = null
                 for (path in vlcPaths) {
                     val dir = File(path)
-                    if (dir.exists() && (File(dir, "libvlc.dll").exists() || 
-                        File(dir, "libvlc.so").exists() || 
-                        File(dir, "libvlc.dylib").exists())) {
-                        System.setProperty("jna.library.path", path)
-                        val pluginsDir = File(dir, "plugins")
-                        if (pluginsDir.exists()) {
-                            System.setProperty("VLC_PLUGIN_PATH", pluginsDir.absolutePath)
+                    if (dir.exists()) {
+                        val hasLibVlc = dir.listFiles()?.any { 
+                            it.name == "libvlc.dll" || 
+                            it.name.startsWith("libvlc.so") || 
+                            it.name == "libvlc.dylib" 
+                        } == true
+                        if (hasLibVlc) {
+                            foundPath = path
+                            System.setProperty("jna.library.path", path)
+                            com.sun.jna.NativeLibrary.addSearchPath("vlc", path)
+                            com.sun.jna.NativeLibrary.addSearchPath("vlccore", path)
+                            
+                            val pluginsDir = listOf(
+                                File(dir, "plugins"),
+                                File(dir, "vlc/plugins"),
+                                File("/usr/lib/x86_64-linux-gnu/vlc/plugins"),
+                                File("/usr/lib/vlc/plugins"),
+                                File("/usr/lib/aarch64-linux-gnu/vlc/plugins")
+                            ).firstOrNull { it.exists() }
+                            if (pluginsDir != null) {
+                                System.setProperty("VLC_PLUGIN_PATH", pluginsDir.absolutePath)
+                            }
+                            break
                         }
-                        break
                     }
                 }
-                NativeDiscovery().discover()
+                val discovered = try { NativeDiscovery().discover() } catch (_: Throwable) { false }
+                discovered || foundPath != null
             } catch (e: Exception) {
                 e.printStackTrace()
                 false
