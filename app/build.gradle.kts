@@ -58,6 +58,12 @@ compose.desktop {
             packageName = "streamlinx"
             packageVersion = "0.0.1"
             description = "Streamlinx - Desktop & Linux Streaming Application"
+
+            linux {
+                debPackageVersion = "0.0.1"
+                appCategory = "video"
+                dependsOn("vlc", "libvlc-dev", "libvlc5")
+            }
         }
     }
 }
