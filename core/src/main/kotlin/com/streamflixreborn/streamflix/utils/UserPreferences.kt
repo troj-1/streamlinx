@@ -65,6 +65,14 @@ object UserPreferences {
         get() = props.getProperty("app_language", "en")
         set(value) { props.setProperty("app_language", value); save() }
 
+    var selectedProviderName: String?
+        get() = props.getProperty("selected_provider")
+        set(value) {
+            if (value != null) props.setProperty("selected_provider", value)
+            else props.remove("selected_provider")
+            save()
+        }
+
     var providerLanguage: String?
         get() = props.getProperty("provider_language")
         set(value) {

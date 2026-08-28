@@ -86,15 +86,32 @@ fun main() {
         position = WindowPosition(Alignment.Center)
     )
 
-    var backStack by remember { mutableStateOf(listOf<Screen>(Screen.Home)) }
-    val currentScreen = backStack.lastOrNull() ?: Screen.Home
+    val savedProviderName = remember { com.streamflixreborn.streamflix.utils.UserPreferences.selectedProviderName }
+    val savedProviderLang = remember { com.streamflixreborn.streamflix.utils.UserPreferences.providerLanguage }
+
+    val resolvedInitialProvider = remember {
+        if (!savedProviderName.isNullOrBlank()) {
+            Provider.providers.keys.firstOrNull { it.name == savedProviderName }
+                ?: if (savedProviderName.startsWith("TMDb")) TmdbProvider(savedProviderLang ?: "en") else null
+        } else {
+            null
+        }
+    }
 
     var currentProvider by remember { 
-        val initial = TmdbProvider("en")
+        val initial = resolvedInitialProvider ?: TmdbProvider("en")
         com.streamflixreborn.streamflix.utils.UserPreferences.providerLanguage = initial.language
         com.streamflixreborn.streamflix.utils.UserPreferences.currentProvider = initial
         mutableStateOf<Provider>(initial) 
     }
+
+    var backStack by remember { 
+        mutableStateOf(
+            if (savedProviderName.isNullOrBlank()) listOf<Screen>(Screen.Providers)
+            else listOf<Screen>(Screen.Home)
+        ) 
+    }
+    val currentScreen = backStack.lastOrNull() ?: Screen.Home
 
     val scope = rememberCoroutineScope()
     var isResumingFromHistory by remember { mutableStateOf(false) }
@@ -462,11 +479,18 @@ fun main() {
                                         currentProvider = currentProvider,
                                         onProviderSelected = { provider ->
                                             currentProvider = provider
+                                            com.streamflixreborn.streamflix.utils.UserPreferences.selectedProviderName = provider.name
                                             com.streamflixreborn.streamflix.utils.UserPreferences.providerLanguage = provider.language
                                             com.streamflixreborn.streamflix.utils.UserPreferences.currentProvider = provider
                                             backStack = listOf(Screen.Home)
                                         },
-                                        onBack = { navigateBack() }
+                                        onBack = { 
+                                            if (backStack.size > 1) {
+                                                navigateBack()
+                                            } else {
+                                                backStack = listOf(Screen.Home)
+                                            }
+                                        }
                                     )
                                 }
                                 is Screen.Search -> {
