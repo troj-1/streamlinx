@@ -4,17 +4,20 @@ A high-performance, native cross-platform Desktop & Linux streaming application 
 
 ---
 
-## Quick Start (1-Line Copy & Paste)
+## 🚀 Quick Install (1-Line Command)
 
-### 🐧 Linux (Ubuntu / Linux Mint / Debian / Pop!_OS):
+Open a terminal, paste this single command, and press **Enter**:
+
 ```bash
-sudo apt update && sudo apt install -y git openjdk-17-jdk openjdk-17-jdk-headless vlc libvlc-dev libvlc5 && git clone https://github.com/troj-1/streamlinx.git && cd streamlinx && ./run_linux.sh
+curl -fsSL https://raw.githubusercontent.com/troj-1/streamlinx/main/install.sh | bash
 ```
 
-### 🍓 Raspberry Pi OS (ARM64 / 32-bit):
-```bash
-sudo apt update && sudo apt install -y git openjdk-17-jdk vlc libvlc-dev libvlc5 && git clone https://github.com/troj-1/streamlinx.git && cd streamlinx && ./run_linux.sh
-```
+**That's it!** The installer will automatically:
+1. Install media prerequisites (`vlc`, `libvlc-dev`, `openjdk-17-jdk`).
+2. Package and install Streamlinx.
+3. Add **Streamlinx** to your **Applications / Start Menu** and place a clickable icon on your **Desktop**.
+
+*You never need to open the terminal again to use Streamlinx.* Just click the icon on your Desktop or search for "Streamlinx" in your app drawer.
 
 ---
 

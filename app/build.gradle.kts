@@ -62,7 +62,9 @@ compose.desktop {
 
             linux {
                 debPackageVersion = "0.0.1"
-                appCategory = "video"
+                appCategory = "AudioVideo;Video;Player;TV;"
+                menuGroup = "AudioVideo"
+                iconFile.set(project.file("src/main/resources/icons/icon.png"))
                 dependsOn("vlc", "libvlc-dev", "libvlc5")
             }
         }
