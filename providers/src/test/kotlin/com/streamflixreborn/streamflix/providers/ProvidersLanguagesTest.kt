@@ -35,26 +35,49 @@ class ProvidersLanguagesTest {
             val videoType = Video.Type.Movie(
                 id = movie.id,
                 title = movie.title,
-                releaseDate = movie.released?.toString().orEmpty(),
+                releaseDate = movie.released?.let { java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(it.time) }.orEmpty(),
                 poster = movie.poster.orEmpty(),
                 imdbId = movie.imdbId
             )
             val servers = provider.getServers(movie.id, videoType)
             println("Language $lang: Found ${servers.size} servers")
+            assertTrue(servers.isNotEmpty(), "Should find servers for movie in $lang")
         }
     }
 
     @Test
-    fun testEnglishProviders() = runBlocking {
-        val enProviders = listOf(TmdbProvider("en"), SflixProvider, RidomoviesProvider)
-        for (p in enProviders) {
-            try {
-                val home = p.getHome()
-                println("English Provider ${p.name}: loaded ${home.size} categories")
-                assertTrue(home.isNotEmpty())
-            } catch (e: Exception) {
-                println("Warning for ${p.name}: ${e.message}")
-            }
+    fun testTvShowServers() = runBlocking {
+        val languages = listOf("en", "es", "ru", "fr", "it", "de")
+        val tvId = "2604" // The Boondocks
+        
+        for (lang in languages) {
+            val provider = TmdbProvider(lang)
+            val show = provider.getTvShow(tvId)
+            println("Language $lang: TV Show title='${show.title}'")
+            assertTrue(show.title.isNotBlank())
+            
+            val videoType = Video.Type.Episode(
+                id = "$tvId-1-1",
+                number = 1,
+                title = "The Garden Party",
+                poster = show.poster,
+                overview = null,
+                tvShow = Video.Type.Episode.TvShow(
+                    id = show.id,
+                    title = show.title,
+                    poster = show.poster,
+                    banner = show.banner,
+                    releaseDate = show.released?.let { java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(it.time) },
+                    imdbId = show.imdbId
+                ),
+                season = Video.Type.Episode.Season(
+                    number = 1,
+                    title = "Season 1"
+                )
+            )
+            val servers = provider.getServers(videoType.id, videoType)
+            println("Language $lang: Found ${servers.size} servers for TV episode")
+            assertTrue(servers.isNotEmpty(), "Should find servers for TV show in $lang")
         }
     }
 }

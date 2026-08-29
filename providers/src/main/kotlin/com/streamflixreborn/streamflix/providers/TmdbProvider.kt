@@ -788,6 +788,44 @@ class TmdbProvider(override val language: String) : Provider {
 
         Log.d("TmdbProvider", "getServers: lang=$language, simplifiedLang=$lang")
 
+        val enrichedVideoType = when (videoType) {
+            is Video.Type.Episode -> {
+                if (videoType.tvShow.imdbId.isNullOrBlank() || videoType.tvShow.releaseDate.isNullOrBlank()) {
+                    try {
+                        val details = TMDb3.TvSeries.details(
+                            seriesId = videoType.tvShow.id.toInt(),
+                            appendToResponse = listOf(TMDb3.Params.AppendToResponse.Tv.EXTERNAL_IDS),
+                            language = language
+                        )
+                        videoType.copy(
+                            tvShow = videoType.tvShow.copy(
+                                imdbId = details.externalIds?.imdbId ?: videoType.tvShow.imdbId,
+                                releaseDate = details.firstAirDate ?: videoType.tvShow.releaseDate
+                            )
+                        )
+                    } catch (e: Exception) {
+                        videoType
+                    }
+                } else videoType
+            }
+            is Video.Type.Movie -> {
+                if (videoType.imdbId.isNullOrBlank() || videoType.releaseDate.isBlank()) {
+                    try {
+                        val details = TMDb3.Movies.details(
+                            movieId = videoType.id.toInt(),
+                            language = language
+                        )
+                        videoType.copy(
+                            imdbId = details.imdbId ?: videoType.imdbId,
+                            releaseDate = details.releaseDate ?: videoType.releaseDate
+                        )
+                    } catch (e: Exception) {
+                        videoType
+                    }
+                } else videoType
+            }
+        }
+
         suspend fun safeAdd(block: suspend () -> Unit) {
             try {
                 block()
@@ -799,81 +837,81 @@ class TmdbProvider(override val language: String) : Provider {
         when (lang) {
             "ru" -> {
                 // Russian servers: Native Russian Dubs first (Kodik / Collaps)
-                safeAdd { servers.addAll(RussianStreamExtractor().servers(videoType)) }
-                safeAdd { servers.addAll(searchNativeProviders(listOf(MEGAKinoProvider, FilmyOnlineCcProvider), videoType)) }
-                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "ru")) }
-                safeAdd { servers.add(VixSrcExtractor().server(videoType, "ru")) }
-                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(RussianStreamExtractor().servers(enrichedVideoType)) }
+                safeAdd { servers.addAll(searchNativeProviders(listOf(MEGAKinoProvider, FilmyOnlineCcProvider), enrichedVideoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(enrichedVideoType, "ru")) }
+                safeAdd { servers.add(VixSrcExtractor().server(enrichedVideoType, "ru")) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(enrichedVideoType)) }
             }
             "de" -> {
                 // German servers
-                safeAdd { servers.addAll(searchNativeProviders(listOf(FilmPalastProvider, SerienStreamProvider, HDFilmeProvider, MEGAKinoProvider), videoType)) }
-                safeAdd { servers.addAll(MoflixExtractor().servers(videoType)) }
-                if (videoType is Video.Type.Movie) {
-                    safeAdd { servers.add(EinschaltenExtractor().server(videoType)) }
+                safeAdd { servers.addAll(searchNativeProviders(listOf(FilmPalastProvider, SerienStreamProvider, HDFilmeProvider, MEGAKinoProvider), enrichedVideoType)) }
+                safeAdd { servers.addAll(MoflixExtractor().servers(enrichedVideoType)) }
+                if (enrichedVideoType is Video.Type.Movie) {
+                    safeAdd { servers.add(EinschaltenExtractor().server(enrichedVideoType)) }
                 }
-                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "de")) }
-                safeAdd { servers.add(VixSrcExtractor().server(videoType, "de")) }
-                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(enrichedVideoType, "de")) }
+                safeAdd { servers.add(VixSrcExtractor().server(enrichedVideoType, "de")) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(enrichedVideoType)) }
             }
             "it" -> {
                 // Italian servers
-                safeAdd { servers.addAll(searchNativeProviders(listOf(StreamingCommunityProvider("it"), Altadefinizione01Provider, CB01Provider, GuardaSerieProvider, AnimeWorldProvider, AnimeSaturnProvider), videoType)) }
-                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "it")) }
-                safeAdd { servers.add(VixSrcExtractor().server(videoType, "it")) }
-                safeAdd { servers.add(TwoEmbedExtractor().server(videoType)) }
-                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(searchNativeProviders(listOf(StreamingCommunityProvider("it"), Altadefinizione01Provider, CB01Provider, GuardaSerieProvider, AnimeWorldProvider, AnimeSaturnProvider), enrichedVideoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(enrichedVideoType, "it")) }
+                safeAdd { servers.add(VixSrcExtractor().server(enrichedVideoType, "it")) }
+                safeAdd { servers.add(TwoEmbedExtractor().server(enrichedVideoType)) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(enrichedVideoType)) }
             }
             "fr" -> {
                 // French servers
-                safeAdd { servers.addAll(searchNativeProviders(listOf(FrenchStreamProvider, WiflixProvider, FrenchAnimeProvider, FrembedProvider), videoType)) }
-                safeAdd { servers.addAll(FrembedExtractor(UserPreferences.getProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL) ?: FrembedProvider.baseUrl).servers(videoType)) }
-                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "fr")) }
-                safeAdd { servers.add(VixSrcExtractor().server(videoType, "fr")) }
-                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(searchNativeProviders(listOf(FrenchStreamProvider, WiflixProvider, FrenchAnimeProvider, FrembedProvider), enrichedVideoType)) }
+                safeAdd { servers.addAll(FrembedExtractor(UserPreferences.getProviderCache(FrembedProvider, UserPreferences.PROVIDER_URL) ?: FrembedProvider.baseUrl).servers(enrichedVideoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(enrichedVideoType, "fr")) }
+                safeAdd { servers.add(VixSrcExtractor().server(enrichedVideoType, "fr")) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(enrichedVideoType)) }
             }
             "pl" -> {
                 // Polish servers
-                safeAdd { servers.addAll(searchNativeProviders(listOf(FilmyOnlineCcProvider, ZaluknijProvider), videoType)) }
-                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "pl")) }
-                safeAdd { servers.add(VixSrcExtractor().server(videoType, "pl")) }
-                safeAdd { servers.add(TwoEmbedExtractor().server(videoType)) }
-                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(searchNativeProviders(listOf(FilmyOnlineCcProvider, ZaluknijProvider), enrichedVideoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(enrichedVideoType, "pl")) }
+                safeAdd { servers.add(VixSrcExtractor().server(enrichedVideoType, "pl")) }
+                safeAdd { servers.add(TwoEmbedExtractor().server(enrichedVideoType)) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(enrichedVideoType)) }
             }
             "pt" -> {
                 // Portuguese servers
-                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "pt")) }
-                safeAdd { servers.add(VixSrcExtractor().server(videoType, "pt")) }
-                safeAdd { servers.add(TwoEmbedExtractor().server(videoType)) }
-                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(enrichedVideoType, "pt")) }
+                safeAdd { servers.add(VixSrcExtractor().server(enrichedVideoType, "pt")) }
+                safeAdd { servers.add(TwoEmbedExtractor().server(enrichedVideoType)) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(enrichedVideoType)) }
             }
             "es" -> {
                 // Spanish servers
                 safeAdd {
                     servers.addAll(searchNativeProviders(
                         listOf(CuevanaEuProvider, PelisplustoProvider, SoloLatinoProvider, CineCalidadProvider, PoseidonHD2Provider),
-                        videoType,
+                        enrichedVideoType,
                         listOf("[LAT]", "[CAST]", "[CAS]", "[ES]", "(LAT)", "(ESP)", "LATINO", "CASTELLANO")
                     ))
                 }
-                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "es")) }
-                safeAdd { servers.add(VixSrcExtractor().server(videoType, "es")) }
-                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(enrichedVideoType, "es")) }
+                safeAdd { servers.add(VixSrcExtractor().server(enrichedVideoType, "es")) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(enrichedVideoType)) }
             }
             else -> {
                 // English (en) or other non-specific languages
-                safeAdd { servers.addAll(searchNativeProviders(listOf(SflixProvider, RidomoviesProvider), videoType)) }
-                safeAdd { servers.addAll(VideasyExtractor().servers(videoType, "en")) }
-                safeAdd { servers.add(VixSrcExtractor().server(videoType, "en")) }
-                safeAdd { servers.add(TwoEmbedExtractor().server(videoType)) }
-                safeAdd { servers.add(VidsrcNetExtractor().server(videoType)) }
-                safeAdd { servers.add(VidflixExtractor().server(videoType)) }
-                if (videoType is Video.Type.Movie) {
-                    safeAdd { servers.add(MoviesapiExtractor().server(videoType)) }
+                safeAdd { servers.addAll(PrimeSrcExtractor().servers(enrichedVideoType)) }
+                safeAdd { servers.addAll(searchNativeProviders(listOf(SflixProvider, RidomoviesProvider), enrichedVideoType)) }
+                safeAdd { servers.addAll(VideasyExtractor().servers(enrichedVideoType, "en")) }
+                safeAdd { servers.add(VidsrcToExtractor().server(enrichedVideoType)) }
+                safeAdd { servers.add(VidsrcNetExtractor().server(enrichedVideoType)) }
+                safeAdd { servers.add(TwoEmbedExtractor().server(enrichedVideoType)) }
+                safeAdd { servers.add(VidflixExtractor().server(enrichedVideoType)) }
+                if (enrichedVideoType is Video.Type.Movie) {
+                    safeAdd { servers.add(MoviesapiExtractor().server(enrichedVideoType)) }
                 }
-                safeAdd { servers.addAll(VidrockExtractor().servers(videoType)) }
-                safeAdd { servers.addAll(VidzeeExtractor().servers(videoType)) }
-                safeAdd { servers.addAll(PrimeSrcExtractor().servers(videoType)) }
+                safeAdd { servers.addAll(VidrockExtractor().servers(enrichedVideoType)) }
+                safeAdd { servers.addAll(VidzeeExtractor().servers(enrichedVideoType)) }
             }
         }
 
@@ -897,7 +935,7 @@ class TmdbProvider(override val language: String) : Provider {
                 }
                 "it" -> when {
                     n.contains("STREAMINGCOMMUNITY") || n.contains("ALTADEFINIZIONE") || n.contains("CB01") || n.contains("GUARDASERIE") || n.contains("ANIMWORLD") || n.contains("ANIMESATURN") -> 150
-                    n.contains("VIXSRC") -> 120
+                    n.contains("VIXSRC") -> 140
                     n.contains("FILEMOON") -> 100
                     n.contains("VIDEASY") -> 80
                     else -> 50
@@ -931,11 +969,11 @@ class TmdbProvider(override val language: String) : Provider {
                     else -> 50
                 }
                 else -> when {
-                    n.contains("VIXSRC") -> 150
-                    n.contains("SFLIX") || n.contains("RIDOMOVIES") -> 130
-                    n.contains("FILEMOON") || n.contains("VOE") -> 110
-                    n.contains("2EMBED") || n.contains("VIDSRC") || n.contains("VIDFLIX") || n.contains("VIDZEE") -> 100
-                    n.contains("VIDEASY") -> 80
+                    n.contains("FILEMOON") || n.contains("VOE") || n.contains("STREAMTAPE") || n.contains("PRIMESRC") -> 150
+                    n.contains("SFLIX") || n.contains("RIDOMOVIES") -> 140
+                    n.contains("VIDEASY") || n.contains("YORU") || n.contains("CYPHER") -> 130
+                    n.contains("VIDSRC") || n.contains("2EMBED") || n.contains("VIDFLIX") -> 110
+                    n.contains("VIDROCK") || n.contains("VIDZEE") -> 90
                     else -> 50
                 }
             }

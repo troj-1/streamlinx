@@ -131,6 +131,23 @@ class VixSrcExtractor : Extractor() {
                     
                     Log.i("StreamFlixES", "[VixSrc] --- Processing START (Lang: $langCode) ---")
 
+                    // If non-Italian language requested, verify the stream is not Italian-only from StreamingCommunity
+                    if (langCode != "it") {
+                        val hasAudioTracks = playlistContent.contains("#EXT-X-MEDIA:TYPE=AUDIO")
+                        val hasTargetAudio = when (langCode) {
+                            "en" -> playlistContent.contains("English", true) || playlistContent.contains("eng", true)
+                            "es" -> playlistContent.contains("Spanish", true) || playlistContent.contains("Español", true) || playlistContent.contains("spa", true)
+                            "de" -> playlistContent.contains("German", true) || playlistContent.contains("Deutsch", true) || playlistContent.contains("ger", true)
+                            "fr" -> playlistContent.contains("French", true) || playlistContent.contains("Français", true) || playlistContent.contains("fra", true)
+                            "ru" -> playlistContent.contains("Russian", true) || playlistContent.contains("Русский", true) || playlistContent.contains("rus", true)
+                            else -> false
+                        }
+                        val isItalianOnlyEdge = playlistContent.contains("edge=sc-") || (playlistContent.contains("lang=it") && !hasTargetAudio)
+                        if (isItalianOnlyEdge && !hasTargetAudio) {
+                            throw Exception("VixSrc stream is Italian-only (StreamingCommunity edge), skipping for language '$langCode'")
+                        }
+                    }
+
                     val lines = playlistContent.lines()
                     val finalLines = mutableListOf<String>()
                     val uriRegex = """URI=["']([^"']+)["']""".toRegex()

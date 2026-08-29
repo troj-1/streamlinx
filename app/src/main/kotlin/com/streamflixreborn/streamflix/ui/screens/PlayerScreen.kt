@@ -261,6 +261,7 @@ fun PlayerScreen(
                             hasAutoSelectedAudio = true
                             val targetLang = (providerLanguage ?: AppSettings.data.appLanguage ?: "en").lowercase().substringBefore("-")
                             val matchKeywords = when (targetLang) {
+                                "en" -> listOf("english", "eng", "en", "original", "orig")
                                 "de" -> listOf("german", "deutsch", "ger", "deu")
                                 "ru" -> listOf("russian", "русский", "rus", "ru", "dub", "rezka", "lostfilm", "dvo", "mvo")
                                 "es" -> listOf("spanish", "español", "espanol", "castellano", "latino", "esp", "spa")

@@ -92,8 +92,8 @@ fun TvShowDetailScreen(
                         title = s.title,
                         poster = s.poster,
                         banner = s.banner,
-                        releaseDate = null,
-                        imdbId = null
+                        releaseDate = s.released?.let { java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(it.time) },
+                        imdbId = s.imdbId
                     ),
                     season = Video.Type.Episode.Season(
                         number = selectedSeason?.number ?: 1,

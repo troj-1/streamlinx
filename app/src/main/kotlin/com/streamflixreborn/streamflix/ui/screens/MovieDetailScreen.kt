@@ -184,7 +184,7 @@ fun MovieDetailScreen(
                                                 val videoType = Video.Type.Movie(
                                                     id = m.id,
                                                     title = m.title,
-                                                    releaseDate = "",
+                                                    releaseDate = m.released?.let { java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(it.time) } ?: "",
                                                     poster = m.poster ?: "",
                                                     imdbId = m.imdbId
                                                 )

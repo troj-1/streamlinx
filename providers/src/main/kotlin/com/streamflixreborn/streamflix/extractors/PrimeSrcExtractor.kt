@@ -69,9 +69,17 @@ class PrimeSrcExtractor : Extractor() {
         }
 
         @GET
+        @retrofit2.http.Headers(
+            "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+            "Referer: https://primesrc.me/"
+        )
         suspend fun getServers(@Url url: String): ServersResponse
 
         @GET
+        @retrofit2.http.Headers(
+            "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+            "Referer: https://primesrc.me/"
+        )
         suspend fun getLink(@Url url: String): LinkResponse
     }
 
