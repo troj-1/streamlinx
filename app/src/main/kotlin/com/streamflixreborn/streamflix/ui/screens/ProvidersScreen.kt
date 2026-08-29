@@ -63,7 +63,7 @@ fun ProvidersScreen(
     
     val allProviders = remember(allBaseProviders, languages) {
         val tmdbProviders = listOf("en", "de", "es", "fr", "it", "pl", "pt", "ru").map { TmdbProvider(it) }
-        allBaseProviders + tmdbProviders
+        tmdbProviders + allBaseProviders
     }
 
     val filteredProviders = remember(allProviders, selectedLanguage, searchQuery) {

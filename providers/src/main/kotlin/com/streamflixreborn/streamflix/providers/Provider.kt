@@ -61,13 +61,14 @@ interface Provider {
 
         val providers: Map<Provider, ProviderSupport> = mapOf(
             SflixProvider to ProviderSupport(movies = true, tvShows = true),
+            RidomoviesProvider to ProviderSupport(movies = true, tvShows = true),
+            SuperStreamProvider to ProviderSupport(movies = true, tvShows = true),
+            PlutoTvUsProvider to ProviderSupport(movies = false, tvShows = true),
             FanpelisProvider to ProviderSupport(movies = true, tvShows = true),
             SerienStreamProvider to ProviderSupport(movies = false, tvShows = true),
             StreamingCommunityProvider("it") to ProviderSupport(movies = true, tvShows = true),
-            StreamingCommunityProvider("en") to ProviderSupport(movies = true, tvShows = true),
             AnimeWorldProvider to ProviderSupport(movies = true, tvShows = true),
             MkissaProvider to ProviderSupport(movies = true, tvShows = true),
-            RidomoviesProvider to ProviderSupport(movies = true, tvShows = true),
             AnikotoProvider to ProviderSupport(movies = true, tvShows = true),
             WiflixProvider to ProviderSupport(movies = true, tvShows = true),
             MStreamProvider to ProviderSupport(movies = true, tvShows = true),

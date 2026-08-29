@@ -43,4 +43,18 @@ class ProvidersLanguagesTest {
             println("Language $lang: Found ${servers.size} servers")
         }
     }
+
+    @Test
+    fun testEnglishProviders() = runBlocking {
+        val enProviders = listOf(TmdbProvider("en"), SflixProvider, RidomoviesProvider)
+        for (p in enProviders) {
+            try {
+                val home = p.getHome()
+                println("English Provider ${p.name}: loaded ${home.size} categories")
+                assertTrue(home.isNotEmpty())
+            } catch (e: Exception) {
+                println("Warning for ${p.name}: ${e.message}")
+            }
+        }
+    }
 }

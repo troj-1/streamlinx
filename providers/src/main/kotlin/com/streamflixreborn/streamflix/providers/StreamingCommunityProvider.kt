@@ -42,14 +42,11 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
     private val mutex = Mutex()
     private val totalCounts = mutableMapOf<String, Int>()
 
-    override val language: String
-        get() = _language ?: "it" ?: "it"
+    override val language: String = "it"
 
-    private val LANG: String
-        get() = if (language == "en") "en" else "it"
+    private val LANG: String = "it"
 
-    private val TAG: String
-        get() = "SCProviderDebug[$LANG]"
+    private val TAG: String = "SCProviderDebug[it]"
 
     private val DEFAULT_DOMAIN: String = "streamingunity.cc"
     private val BLOCKED_DOMAINS = setOf("streamingcommunityz.green", "streamingunity.club", "streamingunity.bike", "streamingcommunityz.buzz")
@@ -81,8 +78,7 @@ class StreamingCommunityProvider(private val _language: String? = null) : Provid
             }
         }
 
-    override val name: String
-        get() = if (language == "it") "StreamingCommunity" else "StreamingCommunity (EN)"
+    override val name: String = "StreamingCommunity"
 
     override val logo get() = "https://${domain.ifEmpty { DEFAULT_DOMAIN }}/apple-touch-icon.png"
     
